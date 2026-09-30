@@ -7,19 +7,33 @@ pedir, a cor do pelo) muda. Cada variante é um modelo separado: exporte cada `.
 coloque os `.cpmmodel` em `.minecraft/player_models`; no menu de **Modelos** do CPM, dentro do jogo, você escolhe e
 aplica qualquer um na hora.
 
-- `tools/variante.py <base.bbmodel> <skin64.png> <saida.bbmodel> [--hide grupos] [--lambda]`: gera uma variante.
-  Lê a skin 64×64 no layout padrão e redesenha corpo/braços/pernas em 2 px por unidade (Scale2x + acabamento leve
-  de tecido; cores fortes ficam nítidas). A **segunda camada** da skin vai na casca própria do modelo (jaqueta,
-  mangas e calças, 0,15 maior que o corpo, igual ao Minecraft) na mesma resolução. Como ela não cabe no atlas
-  128×128, a textura da variante é **256×256**: o atlas antigo fica intacto no canto superior esquerdo (mesmas
-  UVs) e a segunda camada vai no espaço novo. Tufos cobertos pela roupa são apontados para um texel
-  transparente. A cabeça nunca é tocada.
+- `tools/variante.py <base.bbmodel> <skin64.png> <saida.bbmodel> [--hide ...] [--lambda] [--fur paleta] [--head-top linhas]`:
+  gera uma variante. Lê a skin 64×64 no layout padrão e redesenha corpo/braços/pernas em 2 px por unidade
+  (Scale2x + acabamento leve de tecido; cores fortes ficam nítidas). A **segunda camada** da skin vai na casca
+  própria do modelo (jaqueta, mangas e calças, 0,15 maior que o corpo) na mesma resolução. A textura da variante
+  é **256×256**: o atlas antigo fica intacto no canto superior esquerdo (mesmas UVs) e o resto vai no espaço novo.
+  - `--fur <paleta>`: troca a cor de **todo o pelo** (cabeça, orelhas, focinho, tufos, cauda, pálpebras) com um
+    mapa de gradiente sobre o brilho do próprio pelo — as sombras e transições ficam onde estão. Nunca muda:
+    olhos pintados, íris, nariz, faixa das sobrancelhas, linha dos cílios e os objetos dos emotes.
+  - `--head-top <linhas>`: acessórios de cabeça (gorro, óculos, faixas) vão na casca do chapéu (0,25 em volta da
+    cabeça, que fica visível só nessas variantes): as primeiras <linhas> da cabeça da skin + a camada de chapéu
+    da skin. O rosto embaixo não muda.
+  - `--hide`: grupos ou peças de tufo cobertos pela roupa/acessório (apontados para um texel transparente).
+  - A cabeça do modelo nunca é tocada (só a cor do pelo, com `--fur`).
 - **L.A.S.T** — `modelo/variantes/LAST/skin_v16.28_LAST.bbmodel` (+ `Emezomm-CPM_v16.28_LAST_256.png`), da skin
   `skin_LAST_64x64_original.png` (pixels quase transparentes da camada externa — sobras de borracha — ignorados).
   Jaqueta cinza/preta, camisa branca com o **λ laranja** no peito (nas duas camadas), faixa na cintura, calça
   branca com faixas e botas, com a segunda camada em relevo. Tufos do peito escondidos pela camisa.
   Prévia: `previews/variante_LAST.png`.
   Comando: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/LAST/skin_LAST_64x64_original.png modelo/variantes/LAST/skin_v16.28_LAST.bbmodel --hide fur_chest --lambda`
+
+- **Caçadores de recompensas** (variante verde) — `modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel`
+  (+ `Emezomm-CPM_v16.28_CACADORES_256.png`), da skin `skin_CACADORES_64x64_original.png`. Pelo verde (escuro no
+  corpo, verde vivo no focinho, peito, dentro das orelhas e ponta da cauda), gorro de couro com alça e fivela,
+  óculos de lente laranja na testa, colete de couro com o pelo do peito saindo pelo decote, mangas cinza, luvas
+  pretas, cinto verde com fivela dourada, calça marrom e botas. Tufos do topo da cabeça e os 3 de cima da nuca
+  ficam sob o gorro. Prévia: `previews/variante_CACADORES.png`.
+  Comando: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/CACADORES/skin_CACADORES_64x64_original.png modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel --fur verde --head-top 3 --hide fur_top,fur_back_1,fur_back_2,fur_back_3`
 
 ## Versão atual: v16.28 (WTF refeito)
 

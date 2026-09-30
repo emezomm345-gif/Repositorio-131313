@@ -2,6 +2,7 @@
 only the texture of the body / arms / legs changes (the outfit), plus optionally the fur colour.
 
 usage: python3 tools/variante.py <base.bbmodel> <skin64.png> <out.bbmodel> [--hide group,...] [--lambda]
+       [--fur <palette>] [--head-top <rows>]
 
 - The 64x64 skin is read in the standard Minecraft layout; the outer layer (jacket, sleeves, pants) is
   kept for the second-layer shell (see below). Pixels with alpha < 128 are ignored (eraser leftovers).
@@ -13,8 +14,15 @@ usage: python3 tools/variante.py <base.bbmodel> <skin64.png> <out.bbmodel> [--hi
   than the body), like vanilla Minecraft, at the same 2 px per unit. It does not fit in the 128x128 atlas, so
   the variant's texture is 256x256: the whole 128 atlas stays in the top-left corner with the same UVs and the
   second layer goes into the new space.
+- --fur <palette>: recolours ALL the fur (head, ears, snout, tufts, tail, lids...) with a gradient map on the
+  base's own brightness, so every shade/transition stays where it is: dark fur -> dark end of the palette,
+  light fur (muzzle, chest, ear inside, tail tip) -> light end. Never recoloured: painted eyes, iris, nose,
+  brow band, lash line, props.
+- --head-top <rows>: head accessories (cap, goggles, bands...) go on the model's hat shell (0.25 around the
+  head): the top <rows> rows of the skin's head + everything on the skin's hat layer. The face underneath is
+  untouched (hide the head-top tufts with --hide fur_top if the cap covers them).
 - --lambda: the orange mark on the chest becomes a crisp orange lambda symbol.
-- Tufts covered by the clothes (--hide) are pointed at a transparent texel: the geometry stays, they just
+- Tufts covered by the clothes (--hide: group or element names) are pointed at a transparent texel: the geometry stays, they just
   don't show.
 """
 import sys, json, base64, io, zlib
@@ -113,15 +121,56 @@ def draw_lambda(face, x0=5, y0=1):
                 face[y0 + j, x0 + i] = col[ch]
 
 
+FUR_PALETTES = {   # brightness of the base fur -> colour
+    'verde': [(0, (0, 26, 12)), (18, (0, 52, 24)), (30, (0, 68, 29)), (50, (0, 84, 27)), (110, (0, 104, 12)),
+              (180, (0, 128, 0)), (225, (0, 150, 0)), (255, (40, 176, 40))],
+}
+NO_RECOLOUR = ('eye_R_iris', 'eye_L_iris', 'nose', 'palpebra_R', 'palpebra_L', 'hat', 'jacket', 'sleeve', 'Pant',
+               'body', 'right_arm', 'left_arm', 'right_leg', 'left_leg')
+NO_RECOLOUR_PREFIX = ('holo', 'bracelete', 'suor')
+KEEP_COLOURS = {'head': {(0, 0, 0)},                                   # painted eyes
+                'palpebra_sup_R': {(71, 71, 71)}, 'palpebra_sup_L': {(71, 71, 71)},   # lash line
+                'palpebra_inf_R': {(71, 71, 71)}, 'palpebra_inf_L': {(71, 71, 71)}}
+
+
+def recolour_fur(T, d, stops):
+    def rect(uv):
+        u0, v0, u1, v1 = uv
+        return int(min(v0, v1)), int(np.ceil(max(v0, v1))), int(min(u0, u1)), int(np.ceil(max(u0, u1)))
+    fur = np.zeros(T.shape[:2], bool)
+    ban = np.zeros(T.shape[:2], bool)
+    keep = np.zeros(T.shape[:2], bool)
+    for e in d['elements']:
+        bad = e['name'] in NO_RECOLOUR or e['name'].startswith(NO_RECOLOUR_PREFIX)
+        for fc in e['faces'].values():
+            if fc.get('texture') is None: continue
+            y0, y1, x0, x1 = rect(fc['uv'])
+            (ban if bad else fur)[y0:y1, x0:x1] = True
+            for col in KEEP_COLOURS.get(e['name'], ()):
+                keep[y0:y1, x0:x1] |= np.all(T[y0:y1, x0:x1, :3] == col, axis=-1)
+    c = T[..., :3].astype(int)
+    sat = c.max(-1) - c.min(-1)
+    m = fur & ~ban & ~keep & (T[..., 3] > 0) & (sat < 40)
+    L = 0.299 * c[..., 0] + 0.587 * c[..., 1] + 0.114 * c[..., 2]
+    xs = [p for p, _ in stops]
+    for ch in range(3):
+        T[..., ch] = np.where(m, np.interp(L, xs, [col[ch] for _, col in stops]).round(), T[..., ch]).astype(np.uint8)
+    return int(m.sum())
+
+
 def main():
     base, skin_path, out = sys.argv[1:4]
     hide, lam = [], '--lambda' in sys.argv
+    fur = sys.argv[sys.argv.index('--fur') + 1] if '--fur' in sys.argv else None
+    head_top = int(sys.argv[sys.argv.index('--head-top') + 1]) if '--head-top' in sys.argv else 0
     if '--hide' in sys.argv:
         hide = sys.argv[sys.argv.index('--hide') + 1].split(',')
     d = json.load(open(base))
     tex = Image.open(io.BytesIO(base64.b64decode(d['textures'][0]['source'].split(',', 1)[1]))).convert('RGBA')
     T = np.zeros((256, 256, 4), np.uint8)
     T[:128, :128] = np.array(tex)                       # old atlas: same pixels, same UVs
+    if fur:
+        print('fur texels recoloured:', recolour_fur(T, d, FUR_PALETTES[fur]))
     sk = np.array(Image.open(skin_path).convert('RGBA'))
     sk[sk[..., 3] < 128] = 0
     ORANGE = lambda c: (c[..., 0] > 200) & (c[..., 1] < 170) & (c[..., 2] < 90) & (c[..., 3] > 0)
@@ -193,10 +242,29 @@ def main():
                 draw_lambda(big)                            # the shirt is on the outer layer too
             fc['uv'], fc['texture'] = alloc(2 * fw, 2 * fh), 0
             write(fc, big)
-    for e in d['elements']:                              # the hat layer stays empty (the head never changes)
-        if e['name'] == 'hat':
-            for fc in e['faces'].values():
-                fc['uv'], fc['texture'] = [0, 0, 0, 0], None
+    # head accessories on the hat shell: top rows of the skin's head + the skin's hat layer (face untouched)
+    hat = next(e for e in d['elements'] if e['name'] == 'hat')
+    hat['visibility'] = bool(head_top)              # hidden in the base model; shown when it carries accessories
+    for face, (x, y, fw, fh) in box_faces(0, 0, 8, 8, 8).items():
+        fc = hat['faces'][face]
+        xo, yo = box_faces(32, 0, 8, 8, 8)[face][:2]
+        a = np.zeros((fh, fw, 4), np.uint8)
+        if head_top:
+            b = sk[y:y + fh, x:x + fw].copy()
+            if face in ('north', 'south', 'east', 'west'):
+                b[head_top:] = 0
+            elif face == 'down':
+                b[:] = 0
+            a = b
+        over = Image.fromarray(a); over.alpha_composite(Image.fromarray(sk[yo:yo + fh, xo:xo + fw].copy()))
+        a = np.array(over)
+        if not head_top or not (a[..., 3] > 0).any():
+            fc['uv'], fc['texture'] = [0, 0, 0, 0], None
+            continue
+        big = upscale(a, 'head', face, 'hat')
+        big[..., 3] = np.where(big[..., 3] > 0, 255, 0)
+        fc['uv'], fc['texture'] = alloc(2 * fw, 2 * fh), 0
+        write(fc, big)
 
     # tufts under the clothes: point every face at one transparent texel that no face uses
     if hide:
@@ -218,6 +286,7 @@ def main():
                 elif inside:
                     members.add(n)
         walk(d['outliner'], False)
+        members |= {e['uuid'] for e in d['elements'] if e['name'] in hide}   # single elements by name too
         for e in d['elements']:
             if e['uuid'] in members:
                 for fc in e['faces'].values():
