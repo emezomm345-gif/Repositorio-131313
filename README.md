@@ -1,8 +1,17 @@
 # Skin CPM – tufos de pelo
 
-## Versão atual: v16.27 (ajustes: capacete, expressões, pescoço, inventário)
+## Versão atual: v16.28 (WTF refeito)
 
-- `modelo/skin_v16.27.bbmodel` (+ `Emezomm-CPM_v16_27_128.png`): **modelo atual**. Visual parado idêntico à v16.26
+- `modelo/skin_v16.28.bbmodel` (+ `Emezomm-CPM_v16_28_128.png`): **modelo atual**. Visual parado idêntico
+  (conferido em 5 ângulos); só a expressão **WTF** mudou. `previews/v16_28_wtf.gif`: prévia.
+  `tools/v16_28_emotes.py` gera tudo.
+- **WTF** agora é o choque travado de "que porra é essa": olhos **arregalados** (faixa lá em cima, reta),
+  **pupilas minúsculas** tremendo de leve, olhar fixo pra frente, orelhas duras e **gotas de suor** escorrendo
+  pelo rosto (3 gotas novas `suor_1..3`, escondidas dentro da cabeça fora da expressão). O rubor da v16.27 saiu.
+
+## v16.27 (ajustes: capacete, expressões, pescoço, inventário)
+
+- `modelo/skin_v16.27.bbmodel` (+ `Emezomm-CPM_v16_27_128.png`). Visual parado idêntico à v16.26
   (conferido em 5 ângulos); `previews/v16_27_expressoes.gif`: prévia. `tools/v16_27_emotes.py` gera tudo.
 
 - **Ignorar capacete consertado.** Causa: o exportador do CPM só grava um canal de escala se ele muda mais de
