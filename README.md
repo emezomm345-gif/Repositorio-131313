@@ -26,10 +26,13 @@ Cada mecha tem o pivô na **raiz** (onde encosta no corpo), então girar a mecha
 
 ## Textura
 
-Sprites em pixel art simples desenhados à mão (`ART` em `tools/build.py`), 2 px por unidade (mesma densidade da skin),
-mechas curtas levemente caídas, com os tons tirados da própria skin:
+Cada mecha tem a sua própria textura, pintada automaticamente a partir da skin:
 
-- preto (cabeça): 19,19,19 · 24,23,23 · 31,30,28
-- branco (peito/bochechas): 215 · 232 · 244
+- a **raiz** de cada mecha usa exatamente a cor da skin no ponto onde ela sai do corpo,
+- cada pixel da mecha pega a cor da skin logo abaixo dele (então o branco do peito/focinho continua branco,
+  o preto continua preto, e as bordas fazem a transição sozinhas),
+- o desenho em pixel art (`ART` em `tools/build.py`: `M` = cor da skin, `S` = um pouco mais escuro,
+  `L` = um pouco mais claro) só dá forma e sombra, com a sombra entrando aos poucos a partir da raiz,
+- toda cor final é "encaixada" na paleta que a skin já usa, então nenhuma cor nova é inventada.
 
-Ficam numa área da textura que nenhuma face usava (y 108–113).
+Os sprites ficam em áreas da textura que nenhuma face usava.

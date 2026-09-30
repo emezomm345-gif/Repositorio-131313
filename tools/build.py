@@ -1,4 +1,5 @@
 """Adds layered 2D fur tufts (head top/back/sides, cheeks, chest) to the CPM bbmodel.
+Each lock gets its own texture, coloured from the skin right under it (root = exact skin colour).
 
 usage: python3 tools/build.py <original.bbmodel> <output.bbmodel>
 """
@@ -12,62 +13,109 @@ tex_src = d['textures'][0]['source'].split(',', 1)[1]
 tex = Image.open(io.BytesIO(base64.b64decode(tex_src))).convert('RGBA')
 T = tex.load()
 
-# ---------------------------------------------------------------- palette (sampled from the skin)
-# R = deepest shade (spare), S = shade / root, M = main, L = light tip
-DARK = {'R': (16, 16, 16), 'S': (19, 19, 19), 'M': (24, 23, 23), 'L': (31, 30, 28)}      # head fur
-WHITE = {'R': (200, 200, 200), 'S': (215, 215, 215), 'M': (232, 232, 232), 'L': (244, 244, 244)}  # chest / cheeks
-
+ORIG = tex.copy()          # untouched skin, used to sample the colour under every lock
+O = ORIG.load()
 PPU = 2  # texture pixels per model unit (same density as the skin)
 
 # Short, slightly drooping locks. Row 0 = tips, last row = root. '.' = transparent.
+# The colour of every pixel is taken from the skin right under it; the letter only says
+# how it is shaded: M = same as skin, S = a bit darker, L = a bit lighter.
+# The root rows stay exactly the skin colour, so the fur looks like it grows out of the body.
 ART = {
     'row16': [".L.....L....L...",
               "LMS..L.MS..LMS.L",
               "MMS.LMSMMS.MMMSM",
               "MMMSMMMMMMSMMMMM",
-              "SSSSSSSSSSSSSSSS"],
+              "MMMMMMMMMMMMMMMM"],
     'row12': ["..L.....L...",
               ".LMS...LMS.L",
               ".MMS.LMMMSLM",
               "LMMMSMMMMSMM",
-              "SSSSSSSSSSSS"],
+              "MMMMMMMMMMMM"],
     'row8':  [".L....L.",
               "LMS..LMS",
               "MMS.LMMS",
               "MMMSMMMM",
-              "SSSSSSSS"],
+              "MMMMMMMM"],
     'lock':  ["..L...",
               ".LMS..",
               ".MMS.L",
               "LMMSLM",
               "MMMMMS",
-              "SSSSSS"],
+              "MMMMMM"],
 }
 
-
-def paint(u, v, key, pal):
-    rows = ART[key]
-    for y, row in enumerate(rows):
-        for x, ch in enumerate(row):
-            T[u + x, v + y] = (0, 0, 0, 0) if ch == '.' else pal[ch] + (255,)
-    return (u, v, len(rows[0]), len(rows))
+# every opaque colour the skin already uses: fur pixels are snapped to this palette
+_px = np.array(ORIG).reshape(-1, 4)
+_cols, _cnt = np.unique(_px[_px[:, 3] == 255][:, :3], axis=0, return_counts=True)
+PALETTE = _cols[_cnt >= 3].astype(float)
 
 
-# atlas lives in texture rows no face references (y 108..121)
-for y in range(108, 122):
-    for x in range(0, 124):
-        T[x, y] = (0, 0, 0, 0)
-SPRITES = {
-    'dk_row16': paint(0, 108, 'row16', DARK),
-    'dk_row12': paint(16, 108, 'row12', DARK),
-    'dk_row8':  paint(28, 108, 'row8', DARK),
-    'dk_lock':  paint(36, 108, 'lock', DARK),
-    'wt_row16': paint(42, 108, 'row16', WHITE),
-    'wt_row12': paint(58, 108, 'row12', WHITE),
-    'wt_row8':  paint(70, 108, 'row8', WHITE),
-    'wt_lock':  paint(78, 108, 'lock', WHITE),
-}
-assert T[127, 127][3] == 0
+def snap(c):
+    return tuple(int(v) for v in PALETTE[np.argmin(((PALETTE - c) ** 2).sum(1))])
+
+
+def shade(c, ch, k):
+    """c = skin colour under the pixel, ch = ART letter, k = rows away from the root."""
+    lum = sum(c) / 3
+    dark, light = (-5, 7) if lum < 70 else (-12, 10) if lum < 170 else (-16, 9)
+    delta = {'M': 0, 'S': dark, 'L': light}[ch]
+    ramp = (0.0, 0.5, 1.0)[min(k, 2)]              # root = pure skin -> full shading
+    return snap(np.clip(np.array(c, float) + delta * ramp, 0, 255))
+
+
+# ---------------------------------------------------------------- skin sampling
+ELS = {e['name']: e for e in d['elements']}
+FACE_BY_NORMAL = {(1, 0, 0): 'east', (-1, 0, 0): 'west', (0, 1, 0): 'up', (0, -1, 0): 'down',
+                  (0, 0, -1): 'north', (0, 0, 1): 'south'}
+
+
+def face_corners(e, face):
+    """TL, TR, BL corners of an (unrotated) cube face, matching Blockbench uv orientation."""
+    (x0, y0, z0), (x1, y1, z1) = e['from'], e['to']
+    return {
+        'north': ((x1, y1, z0), (x0, y1, z0), (x1, y0, z0)),
+        'south': ((x0, y1, z1), (x1, y1, z1), (x0, y0, z1)),
+        'east':  ((x1, y1, z1), (x1, y1, z0), (x1, y0, z1)),
+        'west':  ((x0, y1, z0), (x0, y1, z1), (x0, y0, z0)),
+        'up':    ((x0, y1, z0), (x1, y1, z0), (x0, y1, z1)),
+        'down':  ((x0, y0, z1), (x1, y0, z1), (x0, y0, z0)),
+    }[face]
+
+
+def skin_at(p, normal, bases):
+    """Skin colour on the surface point p (face picked by the surface normal)."""
+    face = FACE_BY_NORMAL[tuple(int(round(v)) for v in normal)]
+    for name in bases:
+        e = ELS[name]
+        tl, tr, bl = (np.array(c, float) for c in face_corners(e, face))
+        ex, ey = tr - tl, bl - tl
+        s = min(max((p - tl) @ ex / (ex @ ex), 0), 0.999)
+        t = min(max((p - tl) @ ey / (ey @ ey), 0), 0.999)
+        u0, v0, u1, v1 = e['faces'][face]['uv']
+        c = O[int(u0 + s * (u1 - u0)), int(v0 + t * (v1 - v0))]
+        if c[3] == 255:
+            return c[:3]
+    return c[:3]
+
+
+# ---------------------------------------------------------------- atlas (texture areas no face uses)
+FREE = [(0, 108, 124, 16), (0, 16, 64, 16), (16, 48, 32, 16), (0, 0, 40, 8), (0, 8, 32, 8)]
+for fx, fy, fw, fh in FREE:
+    for y in range(fy, fy + fh):
+        for x in range(fx, fx + fw):
+            T[x, y] = (0, 0, 0, 0)
+SHELF = 6
+_shelves = [[fx, fy + i * SHELF, fx + fw] for fx, fy, fw, fh in FREE for i in range(fh // SHELF)]
+
+
+def alloc(w, h):
+    assert h <= SHELF
+    for sh in _shelves:
+        if sh[0] + w <= sh[2]:
+            u = sh[0]; sh[0] += w
+            return u, sh[1]
+    raise RuntimeError('texture atlas full')
 
 
 # ---------------------------------------------------------------- geometry helpers
@@ -87,7 +135,7 @@ BLANK = [127, 127, 128, 128]
 r4 = lambda v: round(float(v), 4)
 
 
-def card(name, sprite, root, flow, normal, tilt=22, scale=1.0, flip=False):
+def card(name, sprite, root, flow, normal, tilt=22, scale=1.0, flip=False, bases=('head',)):
     """One fur card. `root` sits on the surface, the locks hang along `flow` (a direction
     tangent to the surface) and lift `tilt` degrees away from it along `normal`.
     The element pivot is the root, so rotating it swings the lock like real fur."""
@@ -99,9 +147,21 @@ def card(name, sprite, root, flow, normal, tilt=22, scale=1.0, flip=False):
     k = -face
     r = np.cross(up, k)
     R = np.column_stack([r, up, k])
-    su, sv, sw, sh = SPRITES[sprite]
+    rows = ART[sprite.split('_', 1)[1]]
+    sw, sh = len(rows[0]), len(rows)
+    su, sv = alloc(sw, sh)
     w, h = sw / PPU * scale, sh / PPU * scale
-    root = np.array(root, float) + n * 0.03
+    surf = np.array(root, float)
+    root = surf + n * 0.03
+    for j, row in enumerate(rows):                  # paint this lock from the skin under it
+        for i, ch in enumerate(row):
+            if ch == '.':
+                continue
+            lx = (-w / 2 + (i + 0.5) * w / sw) if flip else (w / 2 - (i + 0.5) * w / sw)
+            ly = h - (j + 0.5) * h / sh
+            p = root + R @ np.array([lx, ly, 0.0])
+            p = p - ((p - surf) @ n) * n            # drop it onto the body surface
+            T[su + i, sv + j] = shade(skin_at(p, n, bases), ch, sh - 1 - j) + (255,)
     front = [su + sw, sv, su, sv + sh] if flip else [su, sv, su + sw, sv + sh]
     back = [front[2], front[1], front[0], front[3]]
     faces = {f: {'uv': BLANK, 'texture': 0} for f in ('east', 'west', 'up', 'down')}
@@ -191,13 +251,13 @@ def find_node(nodes, gid):
     return None
 
 
-def group(name, parent, pivot, specs=()):
+def group(name, parent, pivot, specs=(), bases=('head',)):
     g = copy.deepcopy(TEMPLATE)
     g.update(name=name, uuid=str(uuid.uuid4()), origin=[r4(v) for v in pivot], rotation=[0, 0, 0])
     d['groups'].append(g)
     kids = []
     for s in specs:
-        e = card(*s)
+        e = card(*s, bases=bases)
         d['elements'].append(e)
         kids.append(e['uuid'])
     find_node(d['outliner'], parent)['children'].append({'uuid': g['uuid'], 'isOpen': False, 'children': kids})
@@ -216,9 +276,9 @@ group('fur_cheek_R', fur_head, (4, 26, -2.2), side(1, CHEEK_R))
 group('fur_cheek_L', fur_head, (-4, 26, -2.2), side(-1, CHEEK_R))
 
 fur_chest = group('fur_chest', body, (0, 24, -2.15))
-group('fur_chest_rows', fur_chest, (0, 24.3, -2.15), CHEST_ROWS)
-group('fur_chest_edge_R', fur_chest, (2.3, 23, -2.15), side(1, CHEST_EDGE_R))
-group('fur_chest_edge_L', fur_chest, (-2.3, 23, -2.15), side(-1, CHEST_EDGE_R))
+group('fur_chest_rows', fur_chest, (0, 24.3, -2.15), CHEST_ROWS, ('jacket', 'body'))
+group('fur_chest_edge_R', fur_chest, (2.3, 23, -2.15), side(1, CHEST_EDGE_R), ('jacket', 'body'))
+group('fur_chest_edge_L', fur_chest, (-2.3, 23, -2.15), side(-1, CHEST_EDGE_R), ('jacket', 'body'))
 
 # ---------------------------------------------------------------- save
 buf = io.BytesIO(); tex.save(buf, 'PNG')
