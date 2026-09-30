@@ -1,5 +1,22 @@
 # Skin CPM – tufos de pelo
 
+## Variantes (universo L.A.S.T)
+
+Mesma estrutura, mesmo rosto, mesmas animações/emotes/expressões — só a textura da roupa (e, quando a variante
+pedir, a cor do pelo) muda. Cada variante é um modelo separado: exporte cada `.bbmodel` com o plugin do CPM e
+coloque os `.cpmmodel` em `.minecraft/player_models`; no menu de **Modelos** do CPM, dentro do jogo, você escolhe e
+aplica qualquer um na hora.
+
+- `tools/variante.py <base.bbmodel> <skin64.png> <saida.bbmodel> [--hide grupos]`: gera uma variante.
+  Lê a skin 64×64 no layout padrão, junta a camada externa, redesenha corpo/braços/pernas em 2 px por unidade
+  (Scale2x + acabamento leve de tecido; logos/cores fortes ficam nítidos) e esconde os tufos cobertos pela roupa
+  apontando-os para um texel transparente. A cabeça nunca é tocada.
+- **L.A.S.T** — `modelo/variantes/LAST/skin_v16.28_LAST.bbmodel` (+ `Emezomm-CPM_v16.28_LAST_128.png`), feito
+  da skin `skin_LAST_64x64_original.png` (pixels quase transparentes da camada externa — sobras de borracha — foram
+  ignorados). Jaqueta cinza/preta, camisa branca com o logo laranja, faixa na cintura, calça branca com faixas e
+  botas. Tufos do peito escondidos pela camisa. Prévia: `previews/variante_LAST.png`.
+  Comando: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/LAST/skin_LAST_64x64_original.png modelo/variantes/LAST/skin_v16.28_LAST.bbmodel --hide fur_chest`
+
 ## Versão atual: v16.28 (WTF refeito)
 
 - `modelo/skin_v16.28.bbmodel` (+ `Emezomm-CPM_v16_28_128.png`): **modelo atual**. Visual parado idêntico
