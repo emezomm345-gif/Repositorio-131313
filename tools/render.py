@@ -76,7 +76,7 @@ def load(path, pose=None, data=None):
     return quads, tex, d
 
 
-def render(quads, tex, yaw=0, pitch=0, size=(480, 640), center=(0, 17, 0), scale=16, bg=(190, 205, 230)):
+def render(quads, tex, yaw=0, pitch=0, size=(480, 640), center=(0, 17, 0), scale=16, bg=(190, 205, 230), cull=False):
     W, H = size
     th, tw = tex.shape[:2]
     uvs = np.array([tw / 128.0, th / 128.0])
@@ -98,6 +98,8 @@ def render(quads, tex, yaw=0, pitch=0, size=(480, 640), center=(0, 17, 0), scale
             continue
         n /= nn
         shade = 0.55 + 0.45 * max(0.0, float(n @ light))
+        if cull and float((M @ n)[2]) < 0:     # back face (n here is the inward normal)
+            continue
         # screen: x -> -X world at front view (player's right shows on viewer's left)
         sx = W / 2 - V[:, 0] * scale
         syy = H / 2 - V[:, 1] * scale

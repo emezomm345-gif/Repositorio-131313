@@ -1,6 +1,22 @@
 # Skin CPM – tufos de pelo
 
-## Versão atual: v16.19 (correção dos olhos)
+## Versão atual: v16.20 (correções de exportação e flicker)
+
+- `modelo/skin_v16.20.bbmodel`: **modelo atual** (v16.19 + correções abaixo; textura igual à v16.19).
+- `tools/v16_20_correcoes.py`: script da correção.
+
+1. **Erro "Camada de Skin não suporta poses e gestos personalizados"**: o `cpm_data` do projeto agora
+   traz a configuração de codificação de animação com as 6 camadas livres (chapéu, jaqueta, mangas,
+   pernas da calça), igual ao modelo Plantifox. Pode ser mudado no CPM em Animação → Camadas de Skin.
+2. **Flicker**: 95 planos finos (tufos, tufos das orelhas, bochechas) tinham as DUAS faces opostas
+   texturizadas. Agora cada um tem só a face de fora (north; nos `ear_*_tufts_behind` a south);
+   a outra ficou com UV `[0,0,0,0]` e textura nula, que é como o exportador do CPM remove uma face.
+   Tamanho, posição, rotação, UV e textura da face que ficou não mudaram.
+3. `fur_chest_7` era uma cópia exata de `fur_chest_6` no mesmo lugar (faces coincidentes) e foi removida.
+
+Grupos, pivôs, animações e textura: idênticos à v16.19 (conferido).
+
+## v16.19 (correção dos olhos)
 
 - `modelo/skin_v16.19_animado.bbmodel`: **modelo atual** (sua v16.18 + correções abaixo).
 - `modelo/skin_v16.18_usuario.bbmodel`: a v16.18 exatamente como você enviou.
