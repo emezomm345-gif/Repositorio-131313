@@ -22,6 +22,8 @@ usage: python3 tools/variante.py <base.bbmodel> <skin64.png> <out.bbmodel> [--hi
   head): the top <rows> rows of the skin's head + everything on the skin's hat layer. The face underneath is
   untouched (hide the head-top tufts with --hide fur_top if the cap covers them).
 - --acessorios <name>: 3D accessories built for a variant (see ACESSORIOS), textured in the new atlas space.
+- --pelo <part.face[:rows],...>: in those rows of the skin, the accessory green (a bandana not used by the
+  variant) shows the character's own fur (recoloured) instead.
 - --lambda: the orange mark on the chest becomes a crisp orange lambda symbol.
 - Tufts covered by the clothes (--hide: group or element names) are pointed at a transparent texel: the geometry stays, they just
   don't show.
@@ -137,7 +139,7 @@ KEEP_COLOURS = {'head': {(0, 0, 0)},                                   # painted
                 'palpebra_inf_R': {(71, 71, 71)}, 'palpebra_inf_L': {(71, 71, 71)}}
 
 
-def recolour_fur(T, d, stops):
+def recolour_fur(T, d, stops, skip=NO_RECOLOUR):
     def rect(uv):
         u0, v0, u1, v1 = uv
         return int(min(v0, v1)), int(np.ceil(max(v0, v1))), int(min(u0, u1)), int(np.ceil(max(u0, u1)))
@@ -145,7 +147,7 @@ def recolour_fur(T, d, stops):
     ban = np.zeros(T.shape[:2], bool)
     keep = np.zeros(T.shape[:2], bool)
     for e in d['elements']:
-        bad = e['name'] in NO_RECOLOUR or e['name'].startswith(NO_RECOLOUR_PREFIX)
+        bad = e['name'] in skip or e['name'].startswith(NO_RECOLOUR_PREFIX)
         for fc in e['faces'].values():
             if fc.get('texture') is None: continue
             y0, y1, x0, x1 = rect(fc['uv'])
@@ -171,14 +173,23 @@ def main():
     fur = sys.argv[sys.argv.index('--fur') + 1] if '--fur' in sys.argv else None
     head_top = int(sys.argv[sys.argv.index('--head-top') + 1]) if '--head-top' in sys.argv else 0
     acess = sys.argv[sys.argv.index('--acessorios') + 1] if '--acessorios' in sys.argv else None
+    pelo = {}                    # --pelo body.north:0-4,body.up  -> (part, face): (row0, row1) in skin pixels
+    if '--pelo' in sys.argv:
+        for it in sys.argv[sys.argv.index('--pelo') + 1].split(','):
+            pf, _, rr = it.partition(':')
+            r0, _, r1 = rr.partition('-')
+            pelo[tuple(pf.split('.'))] = (int(r0), int(r1) + 1) if rr else (0, 99)
     if '--hide' in sys.argv:
         hide = sys.argv[sys.argv.index('--hide') + 1].split(',')
     d = json.load(open(base))
     tex = Image.open(io.BytesIO(base64.b64decode(d['textures'][0]['source'].split(',', 1)[1]))).convert('RGBA')
     T = np.zeros((256, 256, 4), np.uint8)
     T[:128, :128] = np.array(tex)                       # old atlas: same pixels, same UVs
+    T_fur = T.copy()                                    # the character's own (recoloured) fur, for --pelo
     if fur:
         print('fur texels recoloured:', recolour_fur(T, d, FUR_PALETTES[fur]))
+        LIMB_NAMES = ('body', 'right_arm', 'left_arm', 'right_leg', 'left_leg')
+        recolour_fur(T_fur, d, FUR_PALETTES[fur], skip=tuple(n for n in NO_RECOLOUR if n not in LIMB_NAMES))
     sk = np.array(Image.open(skin_path).convert('RGBA'))
     sk[sk[..., 3] < 128] = 0
     ORANGE = lambda c: (c[..., 0] > 200) & (c[..., 1] < 170) & (c[..., 2] < 90) & (c[..., 3] > 0)
@@ -213,6 +224,21 @@ def main():
             a = sk[y:y + fh, x:x + fw].copy()
             a[..., 3] = 255
             big = upscale(a, part, face)
+            if (part, face) in pelo:
+                # accessory green painted on the skin (e.g. a bandana we don't use) -> the character's own fur
+                r0, r1 = pelo[(part, face)]
+                src = sk[y:y + fh, x:x + fw].astype(int)
+                m = (src[..., 0] < 20) & (src[..., 1] > 55) & (src[..., 2] < 40)
+                rows_ = np.zeros_like(m); rows_[r0:r1] = True
+                m &= rows_
+                if face == 'up':
+                    m = m[::-1]
+                m = m.repeat(2, 0).repeat(2, 1)
+                u0, v0, u1, v1 = E[part]['faces'][face]['uv']
+                own = T_fur[int(min(v0, v1)):int(max(v0, v1)), int(min(u0, u1)):int(max(u0, u1))]
+                if u0 > u1: own = own[:, ::-1]
+                if v0 > v1: own = own[::-1]
+                big[m] = own[m]
             if lam and part == 'body' and face == 'north':
                 draw_lambda(big)
             write(E[part]['faces'][face], big)
