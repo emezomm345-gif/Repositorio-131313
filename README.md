@@ -7,15 +7,19 @@ pedir, a cor do pelo) muda. Cada variante é um modelo separado: exporte cada `.
 coloque os `.cpmmodel` em `.minecraft/player_models`; no menu de **Modelos** do CPM, dentro do jogo, você escolhe e
 aplica qualquer um na hora.
 
-- `tools/variante.py <base.bbmodel> <skin64.png> <saida.bbmodel> [--hide grupos]`: gera uma variante.
-  Lê a skin 64×64 no layout padrão, junta a camada externa, redesenha corpo/braços/pernas em 2 px por unidade
-  (Scale2x + acabamento leve de tecido; logos/cores fortes ficam nítidos) e esconde os tufos cobertos pela roupa
-  apontando-os para um texel transparente. A cabeça nunca é tocada.
-- **L.A.S.T** — `modelo/variantes/LAST/skin_v16.28_LAST.bbmodel` (+ `Emezomm-CPM_v16.28_LAST_128.png`), feito
-  da skin `skin_LAST_64x64_original.png` (pixels quase transparentes da camada externa — sobras de borracha — foram
-  ignorados). Jaqueta cinza/preta, camisa branca com o logo laranja, faixa na cintura, calça branca com faixas e
-  botas. Tufos do peito escondidos pela camisa. Prévia: `previews/variante_LAST.png`.
-  Comando: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/LAST/skin_LAST_64x64_original.png modelo/variantes/LAST/skin_v16.28_LAST.bbmodel --hide fur_chest`
+- `tools/variante.py <base.bbmodel> <skin64.png> <saida.bbmodel> [--hide grupos] [--lambda]`: gera uma variante.
+  Lê a skin 64×64 no layout padrão e redesenha corpo/braços/pernas em 2 px por unidade (Scale2x + acabamento leve
+  de tecido; cores fortes ficam nítidas). A **segunda camada** da skin vai na casca própria do modelo (jaqueta,
+  mangas e calças, 0,15 maior que o corpo, igual ao Minecraft) na mesma resolução. Como ela não cabe no atlas
+  128×128, a textura da variante é **256×256**: o atlas antigo fica intacto no canto superior esquerdo (mesmas
+  UVs) e a segunda camada vai no espaço novo. Tufos cobertos pela roupa são apontados para um texel
+  transparente. A cabeça nunca é tocada.
+- **L.A.S.T** — `modelo/variantes/LAST/skin_v16.28_LAST.bbmodel` (+ `Emezomm-CPM_v16.28_LAST_256.png`), da skin
+  `skin_LAST_64x64_original.png` (pixels quase transparentes da camada externa — sobras de borracha — ignorados).
+  Jaqueta cinza/preta, camisa branca com o **λ laranja** no peito (nas duas camadas), faixa na cintura, calça
+  branca com faixas e botas, com a segunda camada em relevo. Tufos do peito escondidos pela camisa.
+  Prévia: `previews/variante_LAST.png`.
+  Comando: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/LAST/skin_LAST_64x64_original.png modelo/variantes/LAST/skin_v16.28_LAST.bbmodel --hide fur_chest --lambda`
 
 ## Versão atual: v16.28 (WTF refeito)
 

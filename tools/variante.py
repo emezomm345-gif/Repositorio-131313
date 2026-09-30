@@ -1,14 +1,19 @@
 """Variants of Emezomm (L.A.S.T universe and others): same model, same face, same animations -
 only the texture of the body / arms / legs changes (the outfit), plus optionally the fur colour.
 
-usage: python3 tools/variante.py <base.bbmodel> <skin64.png> <out.bbmodel> [--hide group,group,...]
+usage: python3 tools/variante.py <base.bbmodel> <skin64.png> <out.bbmodel> [--hide group,...] [--lambda]
 
-- The 64x64 skin is read in the standard Minecraft layout; the outer layer (jacket, sleeves, pants) is merged
-  onto the base layer. Pixels with alpha < 128 are ignored (eraser leftovers).
+- The 64x64 skin is read in the standard Minecraft layout; the outer layer (jacket, sleeves, pants) is
+  kept for the second-layer shell (see below). Pixels with alpha < 128 are ignored (eraser leftovers).
 - The head is never touched (the face is the same in every variant).
 - Each face of body / arms / legs is redrawn at the model resolution (2 px per unit): Scale2x keeps the pixel-art
   look but smooths diagonals, then a light fabric finish (dither on large flat areas, soft shading from top
   to bottom and a darker seam where two materials meet).
+- The outer layer is ALSO drawn on the model's own second-layer shell (jacket / sleeves / pants, 0.15 bigger
+  than the body), like vanilla Minecraft, at the same 2 px per unit. It does not fit in the 128x128 atlas, so
+  the variant's texture is 256x256: the whole 128 atlas stays in the top-left corner with the same UVs and the
+  second layer goes into the new space.
+- --lambda: the orange mark on the chest becomes a crisp orange lambda symbol.
 - Tufts covered by the clothes (--hide) are pointed at a transparent texel: the geometry stays, they just
   don't show.
 """
@@ -89,44 +94,113 @@ def finish(a, seed=0):
     return a.round().astype(np.uint8)
 
 
+LAMBDA = ["AA....",
+          ".AB...",
+          ".AB...",
+          "..AB..",
+          "..AB..",
+          ".A.AB.",
+          ".A.AB.",
+          "A...AB"]
+
+
+def draw_lambda(face, x0=5, y0=1):
+    """Orange lambda on the white shirt of the body front (16 x 24 px face); B = shade of the long stroke."""
+    col = {'A': (255, 128, 20, 255), 'B': (214, 92, 8, 255)}
+    for j, row in enumerate(LAMBDA):
+        for i, ch in enumerate(row):
+            if ch in col:
+                face[y0 + j, x0 + i] = col[ch]
+
+
 def main():
     base, skin_path, out = sys.argv[1:4]
-    hide = []
+    hide, lam = [], '--lambda' in sys.argv
     if '--hide' in sys.argv:
         hide = sys.argv[sys.argv.index('--hide') + 1].split(',')
     d = json.load(open(base))
     tex = Image.open(io.BytesIO(base64.b64decode(d['textures'][0]['source'].split(',', 1)[1]))).convert('RGBA')
-    T = np.array(tex)
+    T = np.zeros((256, 256, 4), np.uint8)
+    T[:128, :128] = np.array(tex)                       # old atlas: same pixels, same UVs
     sk = np.array(Image.open(skin_path).convert('RGBA'))
     sk[sk[..., 3] < 128] = 0
+    ORANGE = lambda c: (c[..., 0] > 200) & (c[..., 1] < 170) & (c[..., 2] < 90) & (c[..., 3] > 0)
+    if lam:                                             # drop the old orange mark (the lambda replaces it)
+        for y, x in np.argwhere(ORANGE(sk)):
+            nb = [sk[y + dy, x + dx] for dy, dx in ((0, -1), (0, 1), (-1, 0), (1, 0))
+                  if not ORANGE(sk[y + dy, x + dx][None])[0]]
+            sk[y, x] = max(nb, key=lambda c: int(c[:3].sum())) if nb else sk[y, x]
     E = {e['name']: e for e in d['elements']}
 
+    def upscale(a, part, face, seed_extra=''):
+        if face == 'up':
+            a = a[::-1]                                       # skin top: front at the bottom; model: at the top
+        sm, nn = scale2x(a), a.repeat(2, 0).repeat(2, 1)
+        # coloured details (logos, badges) stay crisp: no smoothing where a saturated colour is involved
+        sat = lambda c: (c[..., :3].max(-1).astype(int) - c[..., :3].min(-1)) > 60
+        keep = sat(sm) | sat(nn)
+        sm[keep] = nn[keep]
+        return finish(sm, seed=zlib.crc32((part + face + seed_extra).encode()))
+
+    def write(fc, big):
+        u0, v0, u1, v1 = fc['uv']
+        x0, y0, x1, y1 = int(min(u0, u1)), int(min(v0, v1)), int(max(u0, u1)), int(max(v0, v1))
+        assert (x1 - x0, y1 - y0) == big.shape[1::-1], (fc['uv'], big.shape)
+        if u0 > u1: big = big[:, ::-1]
+        if v0 > v1: big = big[::-1]
+        T[y0:y1, x0:x1] = big
+
+    # --- base layer (opaque)
     for part, ((bx, by), (ox, oy), (w, h, dd)) in LIMBS.items():
-        fb, fo = box_faces(bx, by, w, h, dd), box_faces(ox, oy, w, h, dd)
-        for i, (face, (x, y, fw, fh)) in enumerate(fb.items()):
-            img = Image.fromarray(sk[y:y + fh, x:x + fw].copy())
-            xo, yo = fo[face][:2]
-            img.alpha_composite(Image.fromarray(sk[yo:yo + fh, xo:xo + fw].copy()))
-            a = np.array(img)
-            a[..., 3] = 255                                   # base layer is opaque
-            if face == 'up':
-                a = a[::-1]                                   # skin top: front at the bottom; model: at the top
-            sm, nn = scale2x(a), a.repeat(2, 0).repeat(2, 1)
-            # coloured details (logos, badges) stay crisp: no smoothing where a saturated colour is involved
-            sat = lambda c: (c[..., :3].max(-1).astype(int) - c[..., :3].min(-1)) > 60
-            keep = sat(sm) | sat(nn)
-            sm[keep] = nn[keep]
-            big = finish(sm, seed=zlib.crc32((part + face).encode()))
-            u0, v0, u1, v1 = E[part]['faces'][face]['uv']
-            x0, y0, x1, y1 = int(min(u0, u1)), int(min(v0, v1)), int(max(u0, u1)), int(max(v0, v1))
-            assert (x1 - x0, y1 - y0) == (2 * fw, 2 * fh), (part, face)
-            if u0 > u1: big = big[:, ::-1]
-            if v0 > v1: big = big[::-1]
-            T[y0:y1, x0:x1] = big
+        for face, (x, y, fw, fh) in box_faces(bx, by, w, h, dd).items():
+            a = sk[y:y + fh, x:x + fw].copy()
+            a[..., 3] = 255
+            big = upscale(a, part, face)
+            if lam and part == 'body' and face == 'north':
+                draw_lambda(big)
+            write(E[part]['faces'][face], big)
+
+    # --- second layer on the shell elements, packed into the new space (right half, then bottom-left)
+    shells = {}
+    for e in d['elements']:
+        cx = (e['from'][0] + e['to'][0]) / 2
+        if e['name'] == 'jacket': shells['body'] = e
+        elif e['name'] == 'sleeve': shells['right_arm' if cx > 0 else 'left_arm'] = e
+        elif e['name'] == 'Pant': shells['right_leg' if cx > 0 else 'left_leg'] = e
+    shelf = [128, 0, 0]                                  # x, y, row height (packs in x 128..256, then y 128..256)
+
+    def alloc(w_, h_):
+        if shelf[0] + w_ > 256:
+            shelf[0], shelf[1], shelf[2] = (128 if shelf[1] < 128 else 0), shelf[1] + shelf[2], 0
+        if shelf[1] + h_ > 128 and shelf[1] < 128 and shelf[0] == 128:
+            shelf[0], shelf[1], shelf[2] = 0, 128, 0
+        r = [shelf[0], shelf[1], shelf[0] + w_, shelf[1] + h_]
+        shelf[0] += w_
+        shelf[2] = max(shelf[2], h_)
+        assert r[3] <= 256, 'no room'
+        return r
+    for part, ((bx, by), (ox, oy), (w, h, dd)) in LIMBS.items():
+        e = shells[part]
+        for face, (x, y, fw, fh) in box_faces(ox, oy, w, h, dd).items():
+            a = sk[y:y + fh, x:x + fw].copy()
+            fc = e['faces'][face]
+            if not (a[..., 3] > 0).any():                  # nothing on this face: keep it empty
+                fc['uv'], fc['texture'] = [0, 0, 0, 0], None
+                continue
+            big = upscale(a, part, face, 'shell')
+            big[..., 3] = np.where(big[..., 3] > 0, 255, 0)
+            if lam and part == 'body' and face == 'north':
+                draw_lambda(big)                            # the shirt is on the outer layer too
+            fc['uv'], fc['texture'] = alloc(2 * fw, 2 * fh), 0
+            write(fc, big)
+    for e in d['elements']:                              # the hat layer stays empty (the head never changes)
+        if e['name'] == 'hat':
+            for fc in e['faces'].values():
+                fc['uv'], fc['texture'] = [0, 0, 0, 0], None
 
     # tufts under the clothes: point every face at one transparent texel that no face uses
     if hide:
-        used = np.zeros((128, 128), bool)
+        used = np.zeros((256, 256), bool)
         for e in d['elements']:
             for fc in e['faces'].values():
                 if fc.get('texture') is None: continue
@@ -151,11 +225,14 @@ def main():
                         fc['uv'] = [int(tx), int(ty), int(tx) + 1, int(ty) + 1]
         print('hidden elements:', len(members), 'texel', (int(tx), int(ty)))
 
+    d['resolution'] = {'width': 256, 'height': 256}
+    for k in ('width', 'height', 'uv_width', 'uv_height'):
+        d['textures'][0][k] = 256
     im = Image.fromarray(T)
     buf = io.BytesIO(); im.save(buf, 'PNG')
     d['textures'][0]['source'] = 'data:image/png;base64,' + base64.b64encode(buf.getvalue()).decode()
     name = out.rsplit('/', 1)[-1].rsplit('.', 1)[0]
-    png = name.replace('skin_', 'Emezomm-CPM_') + '_128.png'
+    png = name.replace('skin_', 'Emezomm-CPM_') + '_256.png'
     d['textures'][0]['name'] = d['textures'][0]['relative_path'] = png
     d['name'] = name
     json.dump(d, open(out, 'w'))

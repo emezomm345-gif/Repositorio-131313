@@ -58,6 +58,7 @@ def load(path, pose=None, data=None):
             if not e or e.get('visibility') is False or e.get('type', 'cube') != 'cube':
                 return
             for P, UV in face_quads(e):
+                UV = UV * (128.0 / d.get('resolution', {}).get('width', 128))   # render() assumes 128 units
                 for g in reversed(chain):  # innermost group first
                     dr, dp, ds = pose.get(g['name'], ((0, 0, 0), (0, 0, 0), (1, 1, 1)))
                     R = rotmat([a + b for a, b in zip(g.get('rotation', [0, 0, 0]), dr)])
