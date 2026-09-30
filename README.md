@@ -1,6 +1,23 @@
 # Skin CPM – tufos de pelo
 
-## Versão atual: v16.20 (correções de exportação e flicker)
+## Versão atual: v16.21 (animações corrigidas)
+
+- `modelo/skin_v16.21.bbmodel`: **modelo atual** (modelo/texture idênticos à v16.20, só animações mudaram).
+- `tools/v16_21_animacoes.py`: gera as animações. `previews/v16_21_animacoes.gif`: prévia.
+
+- **Sinal corrigido**: o exportador do CPM inverte X/Y tanto da rotação dos grupos quanto das keyframes;
+  as versões anteriores inverteram mais uma vez, por isso no jogo a cauda descia ao cair, ficava baixa ao
+  correr, subia ao agachar, e as orelhas/olhos iam para o lado errado. Agora a keyframe tem o valor direto.
+- **Emotes removidos** (gestos e alternáveis) — serão adicionados um a um.
+- **Física da cauda**: caindo → sobe (arrasto do ar); correndo → esticada para trás; agachado → baixa
+  (compensando a inclinação do corpo); pulando → sobe; nadando/elytra/rastejando → reta, como leme.
+- **Olhos acompanham a cabeça**: virar a cabeça leva a íris para o lado (um pouco antes da cabeça);
+  olhar para cima abre os olhos e sobe a íris; olhar para baixo desce a íris e franze (pálpebras descem).
+
+Animações (41): sempre ativas: Piscar, Respirar, Orelhas vivas, Focinho farejando, Pelos balancando, Olhar em volta.
+Por estado: Parado - cauda — `standing`; Andando — `walking`; Correndo — `running`; Agachado - espreitando — `sneaking`; Agachado andando — `sneak_walk`; Pulando — `jumping`; Caindo — `falling`; Nadando — `swimming`; Voando (elytra) — `flying`; Voo criativo — `creative_flying`; Dormindo — `sleeping`; Montado — `riding`; Morrendo — `dying`; Machucado — `hurt`; Pegando fogo — `on_fire`; Congelando — `freezing`; Rastejando — `crawling`; Na escada — `on_ladder`; Subindo escada — `climbing_on_ladder`; No inventario — `in_gui`; Mirando arco (esquerda) — `bow_left`; Luneta (esquerda) — `spyglass_left`; Bloqueando (esquerda) — `blocking_left`; Atacando (esquerda) — `punch_left`; Mirando arco (direita) — `bow_right`; Luneta (direita) — `spyglass_right`; Bloqueando (direita) — `blocking_right`; Atacando (direita) — `punch_right`; Vida — `health`; Virando a cabeca — `head_rotation_yaw`; Olhando cima/baixo — `head_rotation_pitch`; Com capacete — `armor_head`; Com peitoral — `armor_body`; Com calca — `armor_legs`; Com cabeca de mob — `wearing_skull`.
+
+## v16.20 (correções de exportação e flicker)
 
 - `modelo/skin_v16.20.bbmodel`: **modelo atual** (v16.19 + correções abaixo; textura igual à v16.19).
 - `tools/v16_20_correcoes.py`: script da correção.

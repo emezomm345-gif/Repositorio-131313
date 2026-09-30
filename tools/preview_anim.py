@@ -32,9 +32,9 @@ def pose_at(anims, t):
                     continue
                 v = lerp_keys(ks, t % an['length'] if an['length'] else 0)
                 if ch == 'rotation':
-                    r = [-v[0], -v[1], v[2]]
+                    r = list(v)            # keyframes carry the delta as it looks (v16.21+)
                 elif ch == 'position':
-                    p = [-v[0], v[1], v[2]]
+                    p = list(v)
                 else:
                     s = v
             old = pose.get(bone['name'], ((0, 0, 0), (0, 0, 0), (1, 1, 1)))
