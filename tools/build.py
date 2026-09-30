@@ -1,5 +1,5 @@
 """Adds layered 2D fur tufts (head top/back/sides, cheeks, chest) to the CPM bbmodel."""
-import json, base64, io, math, random, uuid, copy, sys
+import json, base64, io, math, os, random, uuid, copy, sys
 import numpy as np
 from PIL import Image
 
@@ -10,92 +10,107 @@ tex = Image.open(io.BytesIO(base64.b64decode(tex_src))).convert('RGBA')
 T = tex.load()
 
 # ---------------------------------------------------------------- palette (taken from the skin)
-DARK = dict(base=(12, 12, 12), body=(20, 20, 20), edge=(14, 14, 14), mid=(24, 24, 24),
-            hi=(26, 26, 26), tip=(30, 30, 30), warm=(18, 18, 18))
-WHITE = dict(base=(207, 207, 207), body=(224, 224, 224), edge=(196, 196, 196), mid=(215, 215, 215),
-             hi=(240, 240, 240), tip=(247, 247, 247), warm=(207, 207, 207))
+DARK = dict(main=(24, 24, 24), shade=(16, 16, 16), light=(36, 36, 36))
+WHITE = dict(main=(224, 224, 224), shade=(196, 196, 196), light=(240, 240, 240))
 
 
-def strip(w, h, pal, seed=0, n=None, taper=0.3, lean_amt=1.0, serrate=True):
-    """Layered fur card of broad flame-shaped clumps (with side serrations).
-    Row 0 = tip side, row h-1 = root."""
-    from PIL import ImageDraw
-    rnd = random.Random(seed)
-    n = n or max(2, round(w / 6))
-    clumps = []
-    for i in range(n):
-        cx = (i + 0.5) * w / n + rnd.uniform(-0.6, 0.6)
-        edge = abs((i + 0.5) / n - 0.5) * 2
-        ht = h * (1 - taper * edge) * rnd.uniform(0.82, 1.0)
-        hw = w / n * rnd.uniform(0.7, 0.85)
-        lean = ((cx - w / 2) / w * 3.0 + rnd.uniform(-0.8, 0.8)) * lean_amt
-        clumps.append((cx, ht, hw, lean, 1))
-    for i in range(n - 1):  # shorter clumps filling the gaps, drawn in front
-        cx = (i + 1) * w / n + rnd.uniform(-0.4, 0.4)
-        clumps.append((cx, h * rnd.uniform(0.5, 0.65), w / n * 0.55, rnd.uniform(-0.8, 0.8), 0))
-    img = [[None] * w for _ in range(h)]
-    for cx, ht, hw, lean, big in sorted(clumps, key=lambda c: -c[1]):
-        tip = (cx + lean, h - ht)
-        L, R = (cx - hw, h + 0.5), (cx + hw, h + 0.5)
-        poly = [L, tip, R]
-        if serrate and big and ht > 6 and hw >= 3:
-            # one serration on each flank, pointing up/outward
-            for side, (bx, by) in ((-1, L), (1, R)):
-                f = rnd.uniform(0.4, 0.55)
-                px, py = bx + (tip[0] - bx) * f, by + (tip[1] - by) * f
-                qx, qy = bx + (tip[0] - bx) * (f - 0.28), by + (tip[1] - by) * (f - 0.28)
-                sx, sy = px + side * hw * 0.35, py - ht * 0.02
-                if side < 0:
-                    poly = [L, (qx, qy), (sx, sy), (px, py)] + poly[1:]
-                else:
-                    poly = poly[:-1] + [(px, py), (sx, sy), (qx, qy), R]
-        m = Image.new('L', (w, h), 0)
-        ImageDraw.Draw(m).polygon(poly, fill=255)
-        mp = m.load()
-        for y in range(h):
-            for x in range(w):
-                if not mp[x, y]:
-                    continue
-                t = (h - 0.5 - y) / ht                      # 0 root .. 1 tip
-                ax = cx + lean * max(0, min(1, t))
-                half = max(0.5, hw * (1 - t))
-                s = (x + 0.5 - ax) / half
-                if t > 0.9:
-                    c = pal['tip']
-                elif abs(s) < 0.28 and t > 0.3:
-                    c = pal['hi']
-                elif s < -0.5:
-                    c = pal['edge']
-                elif s > 0.55:
-                    c = pal['mid']
-                else:
-                    c = pal['body']
-                if y == h - 1:
-                    c = pal['warm']
-                img[y][x] = c
-    return img
+PPU = 2  # texture pixels per model unit (same density as the skin)
 
 
-# Sprite atlas (4 px per model unit), only in texture areas no face references:
-#   band 1: y 108..121, x 0..123     band 2: y 16..29, x 0..63
-SPRITES = {
-    'dk_wide':  (0, 108, 32, 12, strip(32, 12, DARK, 1, serrate=False)),
-    'dk_mid':   (32, 108, 24, 12, strip(24, 12, DARK, 2, serrate=False)),
-    'dk_small': (56, 108, 16, 12, strip(16, 12, DARK, 3, n=3, serrate=False)),
-    'dk_long':  (72, 108, 12, 14, strip(12, 14, DARK, 4, n=2, taper=0.4)),
-    'wt_cheek': (84, 108, 12, 14, strip(12, 14, WHITE, 8, n=2, taper=0.4)),
-    'wt_bib':   (96, 108, 16, 14, strip(16, 14, WHITE, 9, n=3, taper=0.35)),
-    'wt_small': (112, 108, 12, 10, strip(12, 10, WHITE, 7, n=2)),
-    'wt_wide':  (0, 16, 28, 12, strip(28, 12, WHITE, 5)),
-    'wt_mid':   (28, 16, 20, 12, strip(20, 12, WHITE, 6)),
-    'dk_side':  (48, 16, 16, 12, strip(16, 12, DARK, 10, n=3, taper=0.4)),
+# Hand-drawn pixel-art tufts. M = main, S = shade, L = light tip, . = gap/transparent.
+ART = {
+    'wide': ["..L......L....L.",
+             ".LM.....MM...LM.",
+             ".MMS..L.MMS..MMS",
+             "MMMS.MM.MMSM.MMS",
+             "MM.SMMMSM.SMMMSM",
+             "MMMMMMMMMMMMMMMM"],
+    'mid':  ["...L......L.",
+             "..LM.....MM.",
+             "..MMS.L..MMS",
+             ".MMMSMM.MM.S",
+             "MM.SMMMSMMSM",
+             "MMMMMMMMMMMM"],
+    'small': ["..L.....",
+              ".LM...L.",
+              ".MMS.MM.",
+              "MMMSMMMS",
+              "M.MSMM.S",
+              "MMMMMMMM"],
+    'long': ["..L...",
+             "..M...",
+             ".MMS..",
+             ".MMS.L",
+             "MM.SMM",
+             "MMMSMS",
+             "MMMMMM"],
+    'side': ["...L....",
+             "..MM..L.",
+             ".MMMS.MS",
+             ".M.MSMMS",
+             "MMMMSM.S",
+             "MMMMMMMM"],
+    'cheek': ["...L..",
+              "..LM..",
+              "..MMS.",
+              ".MM.S.",
+              "LMMMSS",
+              "MMMMMS",
+              "MMMMMM"],
+    'bib':  [".L....L.",
+             ".M...LM.",
+             "MMS..MMS",
+             "MMS.MMMS",
+             "M.SMM.MS",
+             "MMSMMMMS",
+             "MMMMMMMM"],
+    'tiny': [".L..L.",
+             ".MS.MS",
+             "MMSMMS",
+             "M.MM.S",
+             "MMMMMM"],
+    'wwide': ["..L.....L...L.",
+              ".LM....MM..LM.",
+              ".MMS.L.MMS.MMS",
+              "MMMSMM.M.SMMMS",
+              "M.MSMMSMMSM.MS",
+              "MMMMMMMMMMMMMM"],
+    'wmid': ["..L....L..",
+             ".LM...MM..",
+             ".MMS.LMMS.",
+             "MMMSMM.MSM",
+             "M.MSMMSM.S",
+             "MMMMMMMMMM"],
 }
 
-# clear atlas areas then paint
-for (x0, y0, x1, y1) in [(0, 108, 124, 122), (0, 16, 64, 30)]:
-    for y in range(y0, y1):
-        for x in range(x0, x1):
-            T[x, y] = (0, 0, 0, 0)
+
+def art(key, pal):
+    m = {'M': pal['main'], 'S': pal['shade'], 'L': pal['light'], '.': None}
+    return [[m[ch] for ch in row] for row in ART[key]]
+
+
+def sprite(u, v, key, pal):
+    rows = ART[key]
+    return (u, v, len(rows[0]), len(rows), art(key, pal))
+
+
+# Sprite atlas (2 px per model unit), in texture rows no face references (y 108..121)
+SPRITES = {
+    'dk_wide':  sprite(0, 108, 'wide', DARK),
+    'dk_mid':   sprite(16, 108, 'mid', DARK),
+    'dk_small': sprite(28, 108, 'small', DARK),
+    'dk_long':  sprite(36, 108, 'long', DARK),
+    'dk_side':  sprite(42, 108, 'side', DARK),
+    'wt_cheek': sprite(50, 108, 'cheek', WHITE),
+    'wt_bib':   sprite(56, 108, 'bib', WHITE),
+    'wt_small': sprite(64, 108, 'tiny', WHITE),
+    'wt_wide':  sprite(70, 108, 'wwide', WHITE),
+    'wt_mid':   sprite(84, 108, 'wmid', WHITE),
+}
+
+for y in range(108, 122):
+    for x in range(0, 124):
+        T[x, y] = (0, 0, 0, 0)
 for name, (u, v, w, h, px) in SPRITES.items():
     for y in range(h):
         for x in range(w):
@@ -121,8 +136,8 @@ BLANK = [127, 127, 128, 128]
 
 
 def tuft(name, sprite, base, up, facing, scale=1.0, flip=False):
-    """2D fur card: root at `base`, tips toward `up`, front side facing `facing`. 4 px = 1 unit at scale 1."""
-    width, length = SPRITES[sprite][2] / 4 * scale, SPRITES[sprite][3] / 4 * scale
+    """2D fur card: root at `base`, tips toward `up`, front side facing `facing`. PPU px = 1 unit at scale 1."""
+    width, length = SPRITES[sprite][2] / PPU * scale, SPRITES[sprite][3] / PPU * scale
     u = norm(up)
     n = np.array(facing, float)
     n = norm(n - (n @ u) * u)
@@ -237,6 +252,7 @@ add_group('fur_chest', body, (0, 20, -2.2), CHEST)
 buf = io.BytesIO(); tex.save(buf, 'PNG')
 d['textures'][0]['source'] = 'data:image/png;base64,' + base64.b64encode(buf.getvalue()).decode()
 d['name'] = d['name'] + '_tufos'
+d['textures'][0]['name'] = d['textures'][0]['relative_path'] = 'Emezomm-CPM_v16_11_128_tufos.png'
 json.dump(d, open(OUT, 'w'))
-tex.save(OUT.rsplit('.', 1)[0] + '_texture.png')
+tex.save(os.path.join(os.path.dirname(OUT), d['textures'][0]['name']))
 print('ok', len(d['elements']))
