@@ -14,20 +14,23 @@ usage: python3 tools/variante.py <base.bbmodel> <skin64.png> <out.bbmodel> [--hi
   than the body), like vanilla Minecraft, at the same 2 px per unit. It does not fit in the 128x128 atlas, so
   the variant's texture is 256x256: the whole 128 atlas stays in the top-left corner with the same UVs and the
   second layer goes into the new space.
-- --fur <palette>: recolours ALL the fur (head, ears, snout, tufts, tail, lids...) with a gradient map on the
-  base's own brightness, so every shade/transition stays where it is: dark fur -> dark end of the palette,
-  light fur (muzzle, chest, ear inside, tail tip) -> light end. Never recoloured: painted eyes, iris, nose,
+- --fur <palette>: recolours the DARK fur (head, ears, tufts, tail, lids...) with a gradient map on the base's
+  own brightness, so every shade/transition stays where it is. The white/grey fur (muzzle, chest, ear inside,
+  tail tip) is part of every Emezomm and keeps its colour (smooth fade between the two). Never recoloured: painted eyes, iris, nose,
   brow band, lash line, props.
 - --head-top <rows>: head accessories (cap, goggles, bands...) go on the model's hat shell (0.25 around the
   head): the top <rows> rows of the skin's head + everything on the skin's hat layer. The face underneath is
   untouched (hide the head-top tufts with --hide fur_top if the cap covers them).
+- --acessorios <name>: 3D accessories built for a variant (see ACESSORIOS), textured in the new atlas space.
 - --lambda: the orange mark on the chest becomes a crisp orange lambda symbol.
 - Tufts covered by the clothes (--hide: group or element names) are pointed at a transparent texel: the geometry stays, they just
   don't show.
 """
-import sys, json, base64, io, zlib
+import sys, json, base64, io, zlib, uuid, copy, os
 import numpy as np
 from PIL import Image
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from acessorios import ACESSORIOS
 
 LIMBS = {  # model element -> standard skin origin of (base, overlay) box, box size (w, h, d)
     'body': ((16, 16), (16, 32), (8, 12, 4)),
@@ -121,10 +124,11 @@ def draw_lambda(face, x0=5, y0=1):
                 face[y0 + j, x0 + i] = col[ch]
 
 
-FUR_PALETTES = {   # brightness of the base fur -> colour
-    'verde': [(0, (0, 26, 12)), (18, (0, 52, 24)), (30, (0, 68, 29)), (50, (0, 84, 27)), (110, (0, 104, 12)),
-              (180, (0, 128, 0)), (225, (0, 150, 0)), (255, (40, 176, 40))],
+FUR_PALETTES = {   # brightness of the DARK base fur -> colour (light fur is never recoloured, see below)
+    'verde': [(0, (0, 26, 12)), (18, (0, 52, 24)), (30, (0, 68, 29)), (50, (0, 84, 27)), (80, (0, 98, 24)),
+              (255, (0, 98, 24))],
 }
+LIGHT_FUR = (70, 130)   # brightness where the recolour fades out: from here up the white/grey fur stays as it is
 NO_RECOLOUR = ('eye_R_iris', 'eye_L_iris', 'nose', 'palpebra_R', 'palpebra_L', 'hat', 'jacket', 'sleeve', 'Pant',
                'body', 'right_arm', 'left_arm', 'right_leg', 'left_leg')
 NO_RECOLOUR_PREFIX = ('holo', 'bracelete', 'suor')
@@ -153,8 +157,11 @@ def recolour_fur(T, d, stops):
     m = fur & ~ban & ~keep & (T[..., 3] > 0) & (sat < 40)
     L = 0.299 * c[..., 0] + 0.587 * c[..., 1] + 0.114 * c[..., 2]
     xs = [p for p, _ in stops]
+    w = np.clip((L - LIGHT_FUR[0]) / (LIGHT_FUR[1] - LIGHT_FUR[0]), 0, 1)   # 0 = dark fur, 1 = light fur
+    w = w * w * (3 - 2 * w)
     for ch in range(3):
-        T[..., ch] = np.where(m, np.interp(L, xs, [col[ch] for _, col in stops]).round(), T[..., ch]).astype(np.uint8)
+        new = np.interp(L, xs, [col[ch] for _, col in stops]) * (1 - w) + c[..., ch] * w
+        T[..., ch] = np.where(m, new.round(), T[..., ch]).astype(np.uint8)
     return int(m.sum())
 
 
@@ -163,6 +170,7 @@ def main():
     hide, lam = [], '--lambda' in sys.argv
     fur = sys.argv[sys.argv.index('--fur') + 1] if '--fur' in sys.argv else None
     head_top = int(sys.argv[sys.argv.index('--head-top') + 1]) if '--head-top' in sys.argv else 0
+    acess = sys.argv[sys.argv.index('--acessorios') + 1] if '--acessorios' in sys.argv else None
     if '--hide' in sys.argv:
         hide = sys.argv[sys.argv.index('--hide') + 1].split(',')
     d = json.load(open(base))
@@ -265,6 +273,46 @@ def main():
         big[..., 3] = np.where(big[..., 3] > 0, 255, 0)
         fc['uv'], fc['texture'] = alloc(2 * fw, 2 * fh), 0
         write(fc, big)
+
+    # 3D accessories: new groups/elements (the existing model is not touched), textured in the new space
+    if acess:
+        G = {g['name']: g for g in d['groups']}
+
+        def node_of(nodes, uid):
+            for n in nodes:
+                if isinstance(n, dict):
+                    if n['uuid'] == uid:
+                        return n
+                    r = node_of(n['children'], uid)
+                    if r: return r
+        for parent, gname, pivot, els in ACESSORIOS[acess]():
+            g = copy.deepcopy(G['head'])
+            g.update(name=gname, uuid=str(uuid.uuid4()), origin=list(pivot), rotation=[0, 0, 0])
+            d['groups'].append(g)
+            kids = []
+            for name, f, t, faces in els:
+                size = {'north': (t[0] - f[0], t[1] - f[1]), 'south': (t[0] - f[0], t[1] - f[1]),
+                        'east': (t[2] - f[2], t[1] - f[1]), 'west': (t[2] - f[2], t[1] - f[1]),
+                        'up': (t[0] - f[0], t[2] - f[2]), 'down': (t[0] - f[0], t[2] - f[2])}
+                fc_all = {}
+                for k in ('north', 'east', 'south', 'west', 'up', 'down'):
+                    if k not in faces:
+                        fc_all[k] = {'uv': [0, 0, 0, 0], 'texture': None}
+                        continue
+                    img = faces[k]
+                    assert img.shape[1::-1] == (round(size[k][0] * 2), round(size[k][1] * 2)), (name, k, img.shape)
+                    fc_all[k] = {'uv': alloc(img.shape[1], img.shape[0]), 'texture': 0}
+                    write(fc_all[k], img)
+                e = {'name': name, 'box_uv': False, 'render_order': 'default', 'locked': False, 'export': True,
+                     'scope': 0, 'allow_mirror_modeling': True, 'cpm_glow': False, 'cpm_recolor': -1,
+                     'cpm_extrude': False, 'cpm_data': '', 'from': list(f), 'to': list(t), 'autouv': 0, 'color': 3,
+                     'rotation': [0, 0, 0], 'origin': [(f[i] + t[i]) / 2 for i in range(3)], 'faces': fc_all,
+                     'type': 'cube', 'uuid': str(uuid.uuid4())}
+                d['elements'].append(e)
+                kids.append(e['uuid'])
+            node_of(d['outliner'], G[parent]['uuid'])['children'].append(
+                {'uuid': g['uuid'], 'isOpen': False, 'children': kids})
+        print('accessories:', acess)
 
     # tufts under the clothes: point every face at one transparent texel that no face uses
     if hide:

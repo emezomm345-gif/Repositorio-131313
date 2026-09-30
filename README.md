@@ -12,9 +12,12 @@ aplica qualquer um na hora.
   (Scale2x + acabamento leve de tecido; cores fortes ficam nítidas). A **segunda camada** da skin vai na casca
   própria do modelo (jaqueta, mangas e calças, 0,15 maior que o corpo) na mesma resolução. A textura da variante
   é **256×256**: o atlas antigo fica intacto no canto superior esquerdo (mesmas UVs) e o resto vai no espaço novo.
-  - `--fur <paleta>`: troca a cor de **todo o pelo** (cabeça, orelhas, focinho, tufos, cauda, pálpebras) com um
-    mapa de gradiente sobre o brilho do próprio pelo — as sombras e transições ficam onde estão. Nunca muda:
-    olhos pintados, íris, nariz, faixa das sobrancelhas, linha dos cílios e os objetos dos emotes.
+  - `--fur <paleta>`: troca a cor do **pelo escuro** (cabeça, orelhas, tufos, cauda, pálpebras) com um mapa de
+    gradiente sobre o brilho do próprio pelo — as sombras e transições ficam onde estão. O **pelo branco/cinza**
+    (focinho, peito, dentro das orelhas, ponta da cauda) é de todos os Emezomm e **não muda** (transição suave
+    entre os dois). Nunca muda também: olhos pintados, íris, nariz, faixa das sobrancelhas, cílios, objetos.
+  - `--acessorios <nome>`: acessórios **3D** da variante (`tools/acessorios.py`, pixel art pintada em código,
+    2 px por unidade), como peças novas presas na cabeça/focinho — o modelo existente não é alterado.
   - `--head-top <linhas>`: acessórios de cabeça (gorro, óculos, faixas) vão na casca do chapéu (0,25 em volta da
     cabeça, que fica visível só nessas variantes): as primeiras <linhas> da cabeça da skin + a camada de chapéu
     da skin. O rosto embaixo não muda.
@@ -28,12 +31,14 @@ aplica qualquer um na hora.
   Comando: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/LAST/skin_LAST_64x64_original.png modelo/variantes/LAST/skin_v16.28_LAST.bbmodel --hide fur_chest --lambda`
 
 - **Caçadores de recompensas** (variante verde) — `modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel`
-  (+ `Emezomm-CPM_v16.28_CACADORES_256.png`), da skin `skin_CACADORES_64x64_original.png`. Pelo verde (escuro no
-  corpo, verde vivo no focinho, peito, dentro das orelhas e ponta da cauda), gorro de couro com alça e fivela,
-  óculos de lente laranja na testa, colete de couro com o pelo do peito saindo pelo decote, mangas cinza, luvas
-  pretas, cinto verde com fivela dourada, calça marrom e botas. Tufos do topo da cabeça e os 3 de cima da nuca
-  ficam sob o gorro. Prévia: `previews/variante_CACADORES.png`.
-  Comando: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/CACADORES/skin_CACADORES_64x64_original.png modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel --fur verde --head-top 3 --hide fur_top,fur_back_1,fur_back_2,fur_back_3`
+  (+ `Emezomm-CPM_v16.28_CACADORES_256.png`), da skin `skin_CACADORES_64x64_original.png`. Pelo escuro verde (o
+  branco continua branco). Acessórios 3D: **gorro de aviador** de couro com costuras e botão, **alça** saltada com
+  fivela dourada, **óculos** saltados na testa (armação de bronze, lentes laranja, ponte) e **bandana verde**
+  estampada cobrindo o focinho inteiro, com faixa em volta da cabeça, nó e duas pontas atrás (a ponta da frente
+  cai no peito, na textura). Colete de couro, mangas cinza, luvas pretas, cinto verde com fivela, calça marrom e
+  botas, com a segunda camada. Escondidos sob a roupa/acessórios: tufos do peito, do topo da cabeça, 3 de cima da
+  nuca, tufos e bochechas sob a bandana. Prévia: `previews/variante_CACADORES.png`.
+  Comando: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/CACADORES/skin_CACADORES_64x64_original.png modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel --fur verde --acessorios cacadores --hide fur_chest,fur_top,fur_back_1,fur_back_2,fur_back_3,fur_cheek_R,fur_cheek_L,bochechas`
 
 ## Versão atual: v16.28 (WTF refeito)
 
