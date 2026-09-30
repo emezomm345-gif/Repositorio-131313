@@ -1,6 +1,22 @@
 # Skin CPM – tufos de pelo
 
-## Versão atual: v16.15 (cauda)
+## Versão atual: v16.17
+
+- `modelo/skin_v16.17.bbmodel`: **modelo atual** = sua v16.16 + sobrancelha nova + pálpebras + transição cauda/corpo.
+- `modelo/Emezomm-CPM_v16_17_128.png`: textura (128×128, só pixels livres foram usados).
+- `modelo/skin_v16.16_cauda_usuario.bbmodel`: a v16.16 exatamente como você enviou.
+- `tools/v16_17_palpebra_cauda.py`: script da mudança.
+
+O que mudou (nada foi reposicionado):
+- `sobrancelha_R/L`: só a textura — cinza da skin (108 / 94), em arco.
+- `palpebras` (grupo novo em `head`, depois de `sobrancelhas`): `palpebra_R/L`, linha cinza (97 / 60) na borda
+  de cima de cada olho, com um vão preto até a sobrancelha. Pivô na linha da pálpebra (bom para piscar).
+- `tail_base`: textura própria — começa com a cor exata das costas onde sai do corpo e passa em degraus
+  (com pontilhado) para o pelo da cauda.
+- `fur_cauda_raiz` (grupo novo em `body`): 8 mechas em volta da raiz da cauda; raiz na cor das costas, pontas
+  no pelo da cauda, cobrindo a emenda.
+
+## v16.15 (cauda)
 
 - `modelo/skin_v16.15_cauda.bbmodel`: **modelo atual** = v16.14 + cauda de raposa. Nada do que já existia foi alterado.
 - `modelo/Emezomm-CPM_v16_15_128_cauda.png`: textura (continua 128×128, a cauda só usa pixels livres).
