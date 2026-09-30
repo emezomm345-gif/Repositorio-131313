@@ -1,6 +1,37 @@
 # Skin CPM – tufos de pelo
 
-## Versão atual: v16.23 (olhos consertados, cauda deitada, botão das orelhas)
+## Versão atual: v16.24 (configurações + emotes)
+
+- `modelo/skin_v16.24.bbmodel`: **modelo atual**. Tudo da v16.23 continua igual (animações antigas idênticas,
+  visual parado idêntico — conferido).
+- `tools/v16_24_emotes.py`: gera tudo. `previews/v16_24_emotes.gif`: prévia de todos os emotes.
+
+### Configurações (alternáveis do CPM)
+- **Esconder orelhas**, **Esconder cauda** (a cauda e o anel de pelo da raiz).
+
+### Emotes contínuos (poses personalizadas do CPM — ficam em loop e o CPM cancela sozinho quando você se move)
+- **Descansar** — senta, abaixa as orelhas e deixa a cauda repousar no chão.
+- **Parecer serio** — continência perfeita… mas a cauda não para de balançar.
+- **Deitar e olhar o ceu** — deitado de costas, mãos atrás da cabeça, cauda de lado.
+- **Flexoes** — flexões de verdade (mãos no chão, corpo em prancha subindo e descendo).
+Cada um tem transição de entrada e de saída (`c:<nome>` setup/finish).
+
+### Emotes de duração (gestos do CPM — começam e terminam sozinhos, com entrada e saída suaves)
+- **Alerta de emergencia** — ergue o pulso, toca no bracelete, o sinal pisca e aparece a confirmação.
+- **Mapa 3D** — projeta um mapa holográfico e gira com a outra mão.
+- **Holograma de missao** — ergue o bracelete, projeta a interface e navega tocando nela.
+- **Investigar** — ajoelha, fareja e examina o chão.
+- **Saudacao** — acena, inclina a cabeça e abana a cauda.
+- **Pensativo** — mão no queixo, olha para cima, mexe uma orelha.
+- **Comemoracao** — salto exagerado, aterrissa meio torto e se recupera.
+- **Dar de ombros**.
+
+### Objetos dos emotes (invisíveis fora deles)
+- `bracelete` (dentro do antebraço esquerdo; nos emotes cresce e aparece no pulso, com LEDs brilhando).
+- `holo` → `holo_mapa`, `holo_painel` (+ `holo_card`), `holo_sinal`, `holo_ok`: hologramas translúcidos
+  e brilhantes guardados dentro do corpo; os emotes os puxam para a frente e aumentam.
+
+## v16.23 (olhos consertados, cauda deitada, botão das orelhas)
 
 - `modelo/skin_v16.23.bbmodel`: **modelo atual**. Visual parado idêntico à v16.22 (conferido em 5 ângulos).
 - `tools/v16_23_animacoes.py`: gera tudo. `previews/v16_23_olhos_cauda.png`: conferência.
