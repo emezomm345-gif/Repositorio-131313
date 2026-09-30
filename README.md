@@ -1,6 +1,28 @@
 # Skin CPM – tufos de pelo
 
-## Versão atual: v16.14
+## Versão atual: v16.15 (cauda)
+
+- `modelo/skin_v16.15_cauda.bbmodel`: **modelo atual** = v16.14 + cauda de raposa. Nada do que já existia foi alterado.
+- `modelo/Emezomm-CPM_v16_15_128_cauda.png`: textura (continua 128×128, a cauda só usa pixels livres).
+- `tools/v16_15_cauda.py`: gera a cauda (`python3 tools/v16_15_cauda.py modelo/skin_v16.14_tufos.bbmodel modelo/skin_v16.15_cauda.bbmodel`).
+
+Cauda (ossos em cadeia, pivô de cada um na articulação):
+
+```
+body
+└─ cauda          pivô (0, 13.2, 1.6)  rot X 42  (sai da lombar e desce)
+   └─ cauda_1     pivô z 4.1           rot X -9  (vai curvando para cima)
+      └─ cauda_2  pivô z 7.6           rot X -9  (parte mais grossa)
+         └─ cauda_3     pivô z 11.6    rot X -8  (transição preto -> branco)
+            └─ cauda_ponta  z 15.1     rot X -7  (ponta branca)
+```
+
+Cada osso tem o segmento (`tail_*`), um cuboide girado 45° (`tail_*_bevel`, deixa o corte octogonal)
+e as camadas de pelo (`fur_tail_*`) em cima, embaixo, nos lados e nas diagonais, sempre caindo para a ponta.
+A cor vem de um só "mapa" da cauda: preto da skin → cinza quente (109,104,100) → bege (188,179,172) → branco,
+com borda em zigue-zague; os pelos pegam a cor do ponto da cauda de onde saem.
+
+## v16.14
 
 - `modelo/skin_v16.14_tufos.bbmodel`: **modelo atual** (seus ajustes da v16.14 + sobrancelha retexturizada + outliner organizado).
 - `modelo/Emezomm-CPM_v16_14_128_tufos.png`: textura da v16.14 (já embutida no .bbmodel).
