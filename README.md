@@ -1,8 +1,27 @@
 # Skin CPM – tufos de pelo
 
-## Versão atual: v16.26 (últimos emotes)
+## Versão atual: v16.27 (ajustes: capacete, expressões, pescoço, inventário)
 
-- `modelo/skin_v16.26.bbmodel` (+ `Emezomm-CPM_v16_26_128.png`): **modelo atual**. Tudo da v16.25 idêntico
+- `modelo/skin_v16.27.bbmodel` (+ `Emezomm-CPM_v16_27_128.png`): **modelo atual**. Visual parado idêntico à v16.26
+  (conferido em 5 ângulos); `previews/v16_27_expressoes.gif`: prévia. `tools/v16_27_emotes.py` gera tudo.
+
+- **Ignorar capacete consertado.** Causa: o exportador do CPM só grava um canal de escala se ele muda mais de
+  0,01 em relação a 1 — a opção usava escala exatamente 1, então saía **vazia**. Agora usa 1,015 (invisível).
+- **Expressões só no rosto** — agora são **camadas** (liga/desliga): ficam ativas até você desligar, mesmo
+  andando, e entram/saem suaves (`g:<nome>`). Mexem só em pálpebras/faixa, olhos, focinho, orelhas e pelos da
+  cabeça — corpo e cauda livres.
+  - **Raiva** — sobrancelhas bem franzidas, orelhas coladas pra trás, focinho franzindo, pelos da cabeça eriçados.
+  - **Super serio** — olhar reto, fechado e fixo; orelhas um pouco pra trás; nada se mexe.
+  - **WTF** (refeito: estranheza + vergonha + surpresa) — pálpebras levantadas (uma mais que a outra), olhar
+    desviando de lado e voltando, **rubor nas bochechas** (novo, escondido dentro da cabeça fora da expressão),
+    orelhas abertas pros lados com tremidinhas nervosas.
+  - **Tranquilidade** (nova) — pálpebras suaves e relaxadas, olhar calmo, orelhas soltas balançando devagar.
+- **Estalar o pescoco** agora é um gesto com fim (4,6 s): começa e termina na pose normal.
+- **Inventário**: a cauda balança bem menos e mais devagar (era 16° a cada 0,6 s; agora 3,5° a cada 2,4 s).
+
+## v16.26 (últimos emotes)
+
+- `modelo/skin_v16.26.bbmodel` (+ `Emezomm-CPM_v16_26_128.png`). Tudo da v16.25 idêntico
   (geometria, textura e todas as animações — conferido); só foram adicionados 5 emotes.
 - `tools/v16_26_emotes.py`: gera tudo. `previews/v16_26_emotes.gif`: prévia dos emotes novos.
 
