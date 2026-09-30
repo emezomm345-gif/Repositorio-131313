@@ -1,6 +1,25 @@
 # Skin CPM – tufos de pelo
 
-## Versão atual: v16.21 (animações corrigidas)
+## Versão atual: v16.22 (tufos grudados, transições suaves, rosto mais aberto)
+
+- `modelo/skin_v16.22.bbmodel`: **modelo atual** (cubos e textura idênticos à v16.21; visual parado conferido pixel a pixel).
+- `tools/v16_22_animacoes.py`: gera tudo. `previews/v16_22_transicao_agachar.gif`: transição ao agachar/levantar.
+
+- **Tufos grudados no corpo**: cada tufo da cabeça e do peito ganhou um osso próprio `mov_<tufo>` (rotação 0,
+  pivô na raiz do tufo). As animações não giram/escalam mais o grupo inteiro (o que enfiava tufos no corpo e
+  deixava outros flutuando): cada tufo só **levanta** um pouco da pele em volta da própria raiz e volta,
+  nunca abaixo da posição de repouso (conferido numericamente nos 24 tufos).
+- **Transições suaves**: cada pose de movimento tem animação de entrada (`setup`) e de saída (`finish`) do
+  CPM (nome `p:<pose>`), que levam da posição normal até a pose e de volta em 0,15–0,6 s — as orelhas
+  abaixam aos poucos ao agachar e sobem aos poucos ao levantar, a cauda sobe aos poucos ao cair, etc.
+- **Íris**: o olhar sozinho agora anda no máximo 0,15 e o seguir a cabeça 0,32 (somados 0,47, espaço até a
+  borda do olho 0,62) — não sai mais do olho.
+- **Farejar**: bem mais sutil (menos vezes, movimento de ~1/3).
+- **Rosto mais aberto**: nova animação sempre ativa **"Expressao"** — a faixa cinza fica um pouco mais alta
+  (aparece mais olho) e de vez em quando sobe (surpresa leve) ou levanta de um lado só (curioso); no piscar
+  ela desce junto com a pálpebra.
+
+## v16.21 (animações corrigidas)
 
 - `modelo/skin_v16.21.bbmodel`: **modelo atual** (modelo/texture idênticos à v16.20, só animações mudaram).
 - `tools/v16_21_animacoes.py`: gera as animações. `previews/v16_21_animacoes.gif`: prévia.
