@@ -1,7 +1,7 @@
 """3D accessories for the variants (pixel art painted in code, 2 px per unit like the rest of the model).
 
 Each builder returns a list of groups: (parent group, new group name, pivot, [element, ...]) where an element is
-(name, from, to, {face: RGBA array}). Faces missing from the dict are not drawn. Sizes are chosen so every face
+(name, from, to, {face: RGBA array}[, {'rotation': [x, y, z], 'origin': [x, y, z]}]). Faces missing from the dict are not drawn. Sizes are chosen so every face
 is a whole number of pixels at 2 px per unit (checked by the caller).
 """
 import numpy as np
@@ -112,10 +112,37 @@ def cacadores():
                        "21111"], {**BRONZE, **LENS})
     lens_side = rows(1, [BRONZE['3'], BRONZE['2'], BRONZE['2'], BRONZE['1']])
     lens_top, lens_bot = rows(5, [BRONZE['3']]), rows(5, [BRONZE['1']])
-    snout_front = bandana(10, 6, 3)
-    snout_front[1:3, 3:7] = (*GREEN[5], 255)                           # cloth pushed out by the nose
-    snout_front[1, 4] = (*PRINT, 255)
+    nose_front = bandana(6, 5, 3)
+    nose_front[1:3, 2:4] = (*GREEN[5], 255)                            # cloth pushed out by the nose tip
+    nose_front[1, 2] = (*PRINT, 255)
     tail_tip = grid(["GG", "gG", "Gg", "gG", "11"], {'G': GREEN[3], 'g': GREEN[2], '1': GREEN[1]})
+    chin = grid(["GgG",
+                 "gGg",
+                 "GgG",
+                 ".gG",
+                 "..1"], {'G': GREEN[3], 'g': GREEN[2], '1': GREEN[1]})
+    # snout cover: stepped core + two slanted side plates = a wedge tied tight around the snout, narrowing to
+    # the nose (checked: covers every point of the snout in front of the head)
+    SIDE = 24
+    snout = [
+        ('bandana_focinho_ponta', (-1.5, 23.45, -6.75), (1.5, 25.95, -4.25),
+         {'north': nose_front, 'east': bandana(5, 5, 6), 'west': bandana(5, 5, 7),
+          'up': bandana(6, 5, 8, light_top=False), 'down': fill(6, 5, GREEN[1])}),
+        ('bandana_focinho_meio', (-2.0, 23.45, -5.75), (2.0, 26.45, -4.25),
+         {'north': bandana(8, 6, 9), 'east': bandana(3, 6, 10), 'west': bandana(3, 6, 11),
+          'up': bandana(8, 3, 12, light_top=False), 'down': fill(8, 3, GREEN[1])}),
+        ('bandana_focinho_base', (-2.5, 23.45, -5.25), (2.5, 26.45, -4.25),
+         {'north': bandana(10, 6, 13), 'east': bandana(2, 6, 14), 'west': bandana(2, 6, 15),
+          'up': bandana(10, 2, 16, light_top=False), 'down': fill(10, 2, GREEN[1])}),
+    ]
+    for sg, nm in ((1, 'R'), (-1, 'L')):
+        c = (sg * 2.05, 24.7, -5.5)
+        snout.append(('bandana_focinho_lado_' + nm, (c[0] - 0.25, c[1] - 1.25, c[2] - 1.5),
+                      (c[0] + 0.25, c[1] + 1.25, c[2] + 1.5),
+                      {'north': rows(1, [GREEN[4]] + [GREEN[3]] * 3 + [GREEN[1]]),
+                       'east': bandana(6, 5, 17 + sg), 'west': bandana(6, 5, 19 + sg),
+                       'up': rows(1, [GREEN[4]] * 6), 'down': rows(1, [GREEN[1]] * 6)},
+                      {'rotation': [0, sg * SIDE, 0], 'origin': list(c)}))
     return [
         ('head', 'acess_gorro', (0, 30, 0), [
             ('gorro', (-4.25, 29.0, -4.25), (4.25, 32.5, 4.25),
@@ -135,21 +162,21 @@ def cacadores():
              {'north': rows(5, [BRONZE['2']]), 'up': rows(5, [BRONZE['3']]), 'down': rows(5, [BRONZE['1']])}),
         ]),
         ('head', 'acess_bandana', (0, 25, 0), [
-            ('bandana_faixa', (-4.25, 24.0, -4.25), (4.25, 26.0, 4.25),
-             {'north': bandana(17, 4, 1), 'south': bandana(17, 4, 2), 'east': bandana(17, 4, 4),
-              'west': bandana(17, 4, 5), 'down': fill(17, 17, GREEN[1])}),
+            ('bandana_faixa', (-4.25, 23.75, -4.25), (4.25, 26.25, 4.25),
+             {'north': bandana(17, 5, 1), 'south': bandana(17, 5, 2), 'east': bandana(17, 5, 4),
+              'west': bandana(17, 5, 5), 'down': fill(17, 17, GREEN[1])}),
             ('bandana_no', (-0.5, 24.5, 4.25), (0.5, 25.5, 4.75),
              {'south': rows(2, [GREEN[4], GREEN[2]]), 'east': rows(1, [GREEN[3], GREEN[1]]),
               'west': rows(1, [GREEN[3], GREEN[1]]), 'up': rows(2, [GREEN[4]]), 'down': rows(2, [GREEN[1]])}),
             ('bandana_ponta_1', (-1.25, 22.0, 4.5), (-0.25, 24.5, 4.5), {'south': tail_tip}),
             ('bandana_ponta_2', (0.25, 22.0, 4.5), (1.25, 24.5, 4.5), {'south': tail_tip[:, ::-1].copy()}),
+            # the cloth hanging under the chin (2D, facing forward), slightly open
+            ('bandana_queixo_R', (0.1, 21.4, -4.3), (1.6, 23.9, -4.3), {'north': chin[:, ::-1].copy()},
+             {'rotation': [0, 0, -8], 'origin': [0.85, 23.9, -4.3]}),
+            ('bandana_queixo_L', (-1.6, 21.4, -4.3), (-0.1, 23.9, -4.3), {'north': chin},
+             {'rotation': [0, 0, 8], 'origin': [-0.85, 23.9, -4.3]}),
         ]),
-        ('focinho', 'acess_bandana_focinho', (0, 24.75, -5.5), [
-            # covers the whole snout (its tilted pieces reach x +-2.25, y 26.39, z -6.66 in front of the head)
-            ('bandana_focinho', (-2.5, 23.5, -6.75), (2.5, 26.5, -4.25),
-             {'north': snout_front, 'east': bandana(5, 6, 6), 'west': bandana(5, 6, 7),
-              'up': bandana(10, 5, 8, light_top=False), 'down': fill(10, 5, GREEN[1])}),
-        ]),
+        ('focinho', 'acess_bandana_focinho', (0, 24.75, -5.5), snout),
     ]
 
 

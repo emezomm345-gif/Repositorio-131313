@@ -290,7 +290,7 @@ def main():
             g.update(name=gname, uuid=str(uuid.uuid4()), origin=list(pivot), rotation=[0, 0, 0])
             d['groups'].append(g)
             kids = []
-            for name, f, t, faces in els:
+            for name, f, t, faces, *extra in els:
                 size = {'north': (t[0] - f[0], t[1] - f[1]), 'south': (t[0] - f[0], t[1] - f[1]),
                         'east': (t[2] - f[2], t[1] - f[1]), 'west': (t[2] - f[2], t[1] - f[1]),
                         'up': (t[0] - f[0], t[2] - f[2]), 'down': (t[0] - f[0], t[2] - f[2])}
@@ -307,6 +307,7 @@ def main():
                      'scope': 0, 'allow_mirror_modeling': True, 'cpm_glow': False, 'cpm_recolor': -1,
                      'cpm_extrude': False, 'cpm_data': '', 'from': list(f), 'to': list(t), 'autouv': 0, 'color': 3,
                      'rotation': [0, 0, 0], 'origin': [(f[i] + t[i]) / 2 for i in range(3)], 'faces': fc_all,
+                     **(extra[0] if extra else {}),
                      'type': 'cube', 'uuid': str(uuid.uuid4())}
                 d['elements'].append(e)
                 kids.append(e['uuid'])
