@@ -1,8 +1,40 @@
 # Skin CPM – tufos de pelo
 
-## Versão atual: v16.24 (configurações + emotes)
+## Versão atual: v16.25 (emotes finais + ignorar capacete)
 
-- `modelo/skin_v16.24.bbmodel`: **modelo atual**. Tudo da v16.23 continua igual (animações antigas idênticas,
+- `modelo/skin_v16.25.bbmodel` (+ `Emezomm-CPM_v16_25_128.png`): **modelo atual**. Geometria e textura idênticas
+  à v16.24; animações antigas idênticas (conferido), exceto as mudanças abaixo.
+- `tools/v16_25_emotes.py`: gera tudo. `previews/v16_25_emotes.gif`: prévia dos emotes novos.
+
+### Removidos
+Parecer serio, Flexoes, Comemoracao, Dar de ombros e Descansar (com as transições deles).
+
+### Configurações (alternáveis do CPM)
+- **Esconder orelhas**, **Esconder cauda** (como antes).
+- **Ignorar capacete** (novo) — com ele ligado as orelhas aparecem mesmo de capacete/cabeça de mob.
+  Como funciona: o capacete agora esconde as orelhas com uma animação **não aditiva** própria
+  ("Com capacete - orelhas", prioridade 50); "Ignorar capacete" (prioridade 60) volta as orelhas ao tamanho
+  normal e "Esconder orelhas" (prioridade 70) continua vencendo os dois. Os tufos do topo da cabeça continuam
+  escondidos pelo capacete, pra não atravessar.
+
+### Emotes contínuos (loop até você se mover; entrada e saída suaves `c:<nome>`)
+- **Deitar e olhar o ceu** (como antes).
+- **Pensativo** — agora é contínuo: mão no queixo, cabeça balança devagar, olhos vagando, orelha mexendo.
+- **Tristeza** (novo) — cabisbaixo, ombros caídos, orelhas e cauda pra baixo, suspiro pesado a cada ciclo
+  (sem choro).
+
+### Emotes de duração (começam e terminam sozinhos, com entrada e saída suaves)
+- Alerta de emergencia, Mapa 3D, Holograma de missao, Investigar, Saudacao (como antes).
+- **Alongamento** (novo) — estica os braços pra cima na ponta dos pés, inclina pros dois lados, puxa cada braço
+  sobre o peito e balança as pernas; orelhas e pelos acompanham.
+- **Finalizando missao** (novo) — ergue o bracelete, abre o holograma, passa até o último item, toca e o
+  **check verde** aparece "carimbando"; acena com a cabeça, fecha o holograma, soquinho de vitória e abana a cauda.
+- **Pouso de heroi** (novo) — use logo ao cair de um lugar alto: impacto com joelho e mão no chão, pelos
+  levantando, cabeça baixa… levanta o olhar pra frente, se ergue devagar e fica de pé imponente.
+
+## v16.24 (configurações + emotes)
+
+- `modelo/skin_v16.24.bbmodel`. Tudo da v16.23 continua igual (animações antigas idênticas,
   visual parado idêntico — conferido).
 - `tools/v16_24_emotes.py`: gera tudo. `previews/v16_24_emotes.gif`: prévia de todos os emotes.
 
