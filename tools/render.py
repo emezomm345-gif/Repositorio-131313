@@ -42,8 +42,10 @@ def face_quads(e):
     return out
 
 
-def load(path):
-    d = json.load(open(path))
+def load(path, pose=None, data=None):
+    """pose: {group name: (rot_delta_xyz, pos_delta_xyz, scale_xyz)} in model convention."""
+    d = data if data is not None else json.load(open(path))
+    pose = pose or {}
     src = d['textures'][0]['source'].split(',', 1)[1]
     tex = np.array(Image.open(io.BytesIO(base64.b64decode(src))).convert('RGBA')).astype(float)
     els = {e['uuid']: e for e in d['elements']}
@@ -57,8 +59,10 @@ def load(path):
                 return
             for P, UV in face_quads(e):
                 for g in reversed(chain):  # innermost group first
-                    R = rotmat(g.get('rotation', [0, 0, 0])); o = np.array(g['origin'], float)
-                    P = (P - o) @ R.T + o
+                    dr, dp, ds = pose.get(g['name'], ((0, 0, 0), (0, 0, 0), (1, 1, 1)))
+                    R = rotmat([a + b for a, b in zip(g.get('rotation', [0, 0, 0]), dr)])
+                    o = np.array(g['origin'], float)
+                    P = ((P - o) * np.array(ds, float)) @ R.T + o + np.array(dp, float)
                 quads.append((P, UV))
             return
         g = grps[node['uuid']]

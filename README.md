@@ -1,6 +1,86 @@
 # Skin CPM – tufos de pelo
 
-## Versão atual: v16.17
+## Versão atual: v16.18 (animações)
+
+- `modelo/skin_v16.18_animado.bbmodel`: **modelo atual** = sua v16.17 + 57 animações CPM + íris brilhando.
+- `modelo/Emezomm-CPM_v16_18_128.png`: textura.
+- `modelo/skin_v16.17_usuario.bbmodel`: a v16.17 exatamente como você enviou.
+- `tools/v16_18_animacoes.py`: gera tudo (cada animação é descrita por curvas, fácil de ajustar).
+- `tools/preview_anim.py` e `previews/v16_18_animacoes.gif`: prévias.
+
+Nada do modelo foi movido. Para animar partes isoladas foram criados ossos "embrulho" com rotação 0
+(não mudam nada na posição): `olho_R/L`, `iris_R/L` (em `olhos`), `palp_R/L` (em `palpebras`),
+`nariz`, `mandibula` (em `focinho`), `orelha_R_mov`, `orelha_L_mov` (em `orelhas`).
+A íris (`eye_R_iris`, `eye_L_iris`) agora tem **CPM Glow** (brilha no escuro) e as laterais ficaram no mesmo branco 247 da frente.
+
+Todas as animações são **aditivas**: a animação padrão do Minecraft (braços, pernas, corpo, cabeça) continua igual.
+
+### Sempre ativas (global)
+- Piscar (6.0s)
+- Respirar (3.6s)
+- Orelhas vivas (7.0s)
+- Focinho farejando (5.0s)
+- Pelos balancando (4.0s)
+- Olhar em volta (9.0s)
+
+### Automáticas por estado do jogador (poses do CPM)
+- Parado - cauda — `standing`
+- Andando — `walking`
+- Correndo — `running`
+- Agachado - espreitando — `sneaking`
+- Agachado andando — `sneak_walk`
+- Pulando — `jumping`
+- Caindo — `falling`
+- Nadando — `swimming`
+- Voando (elytra) — `flying`
+- Voo criativo — `creative_flying`
+- Dormindo — `sleeping`
+- Montado — `riding`
+- Morrendo — `dying`
+- Machucado — `hurt`
+- Pegando fogo — `on_fire`
+- Congelando — `freezing`
+- Comendo (esquerda) — `eating_left`
+- Comendo (direita) — `eating_right`
+- Rastejando — `crawling`
+- Na escada — `on_ladder`
+- Subindo escada — `climbing_on_ladder`
+- No inventario — `in_gui`
+- Mirando arco (esquerda) — `bow_left`
+- Luneta (esquerda) — `spyglass_left`
+- Bloqueando (esquerda) — `blocking_left`
+- Atacando (esquerda) — `punch_left`
+- Mirando arco (direita) — `bow_right`
+- Luneta (direita) — `spyglass_right`
+- Bloqueando (direita) — `blocking_right`
+- Atacando (direita) — `punch_right`
+- Falando — `speaking`
+- Vida — `health`
+- Virando a cabeca — `head_rotation_yaw`
+- Olhando cima/baixo — `head_rotation_pitch`
+- Com capacete — `armor_head`
+- Com peitoral — `armor_body`
+- Com calca — `armor_legs`
+- Com cabeca de mob — `wearing_skull`
+
+### Gestos (roda de gestos do CPM)
+- Abanar a cauda (repete)
+- Feliz (repete)
+- Bravo (repete)
+- Triste (repete)
+- Surpreso (uma vez)
+- Farejar (uma vez)
+- Bocejar (uma vez)
+- Piscadela (uma vez)
+- Sacudir o pelo (uma vez)
+
+### Alternáveis (layers do CPM)
+- Orelhas para tras
+- Orelhas atentas
+- Cauda enrolada
+- Cauda erguida
+
+## v16.17
 
 - `modelo/skin_v16.17.bbmodel`: **modelo atual** = sua v16.16 + sobrancelha nova + pálpebras + transição cauda/corpo.
 - `modelo/Emezomm-CPM_v16_17_128.png`: textura (128×128, só pixels livres foram usados).
