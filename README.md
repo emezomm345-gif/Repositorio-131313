@@ -1,5 +1,29 @@
 # Skin CPM – tufos de pelo
 
+## Versão atual: v16.14
+
+- `modelo/skin_v16.14_tufos.bbmodel`: **modelo atual** (seus ajustes da v16.14 + sobrancelha retexturizada + outliner organizado).
+- `modelo/Emezomm-CPM_v16_14_128_tufos.png`: textura da v16.14 (já embutida no .bbmodel).
+- `modelo/skin_v16.14_tufos_original_usuario.bbmodel`: a v16.14 exatamente como você enviou.
+- `tools/v16_14_sobrancelha_organizar.py`: script que faz só isso, sem mover nada.
+
+Organização da cabeça:
+
+```
+head
+├─ head, hat
+├─ olhos          eye_R, eye_R_iris, eye_L, eye_L_iris
+├─ sobrancelhas   sobrancelha_R, sobrancelha_L
+├─ focinho        snout_side_R/L, snout_top, snout_bottom, nose
+├─ bochechas      cheek_R, cheek_L
+├─ orelhas        orelha_L, orelha_R
+└─ fur_head       fur_top, fur_back, fur_cheek_R/L
+body
+└─ fur_chest      fur_chest_rows, fur_chest_edge_R/L
+```
+
+## Histórico (v16.11)
+
 - `modelo/skin_v16.11_original.bbmodel`: modelo original (sem alterações).
 - `modelo/skin_v16.11_tufos.bbmodel`: modelo com tufos de pelo 2D em camadas (abra no Blockbench, formato CPM).
 - `modelo/Emezomm-CPM_v16_11_128_tufos.png`: textura 128×128 com os sprites dos tufos (já embutida no .bbmodel).
