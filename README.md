@@ -1,6 +1,26 @@
 # Skin CPM – tufos de pelo
 
-## Versão atual: v16.18 (animações)
+## Versão atual: v16.19 (correção dos olhos)
+
+- `modelo/skin_v16.19_animado.bbmodel`: **modelo atual** (sua v16.18 + correções abaixo).
+- `modelo/skin_v16.18_usuario.bbmodel`: a v16.18 exatamente como você enviou.
+- `tools/v16_19_animacoes.py`: gera tudo. `previews/v16_19_piscar.gif`: o piscar novo.
+
+Correções:
+- **Olho fechando de verdade**: 2 pálpebras novas por olho no grupo `palpebras`:
+  `palp_sup_R/L` → `palpebra_sup_R/L` (de cima, cor do pelo com a linha de cílios cinza curva) e
+  `palp_inf_R/L` → `palpebra_inf_R/L` (de baixo). Ficam escondidas dentro da cabeça com o olho aberto
+  (o visual parado é idêntico, conferido pixel a pixel) e deslizam por cima do olho para fechar.
+  Pivô da de cima na borda de cima, da de baixo na borda de baixo. O olho não é mais achatado.
+  Semicerrar usa só a de cima; a de baixo sobe apenas quando o olho fecha quase todo.
+  A faixa cinza (`palp_R/L`) só acompanha um pouco.
+- **Sem boca**: removidas "Falando", "Comendo (esquerda/direita)" e todo movimento de mandíbula
+  (em Feliz, Bravo, Piscadela). "Bocejar" virou **"Sonolento"** (olhos pesando, orelhas relaxando,
+  uma piscada para acordar). O osso `mandibula` foi retirado (o `snout_bottom` voltou ao `focinho`, sem mudança).
+- "Feliz" agora fecha os olhos inteiros (sorriso de olhos fechados).
+- As outras animações continuam iguais (54 no total).
+
+## v16.18 (animações)
 
 - `modelo/skin_v16.18_animado.bbmodel`: **modelo atual** = sua v16.17 + 57 animações CPM + íris brilhando.
 - `modelo/Emezomm-CPM_v16_18_128.png`: textura.
