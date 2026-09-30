@@ -1,6 +1,23 @@
 # Skin CPM – tufos de pelo
 
-## Versão atual: v16.22 (tufos grudados, transições suaves, rosto mais aberto)
+## Versão atual: v16.23 (olhos consertados, cauda deitada, botão das orelhas)
+
+- `modelo/skin_v16.23.bbmodel`: **modelo atual**. Visual parado idêntico à v16.22 (conferido em 5 ângulos).
+- `tools/v16_23_animacoes.py`: gera tudo. `previews/v16_23_olhos_cauda.png`: conferência.
+
+- **Piscar tinha parado — causa**: no CPM a escala de animações aditivas é **multiplicada**. Várias animações
+  (piscar, olhar p/ baixo, vida, poses) deixavam as pálpebras em 0,04 ao mesmo tempo → 0,04 × 0,04… e o piscar
+  nunca conseguia fechar. **Correção**: as pálpebras agora são movidas só por animações **não aditivas**
+  "<nome> - olhos", com prioridade (piscar = 0, franzir das poses = 20, arco/luneta = 30, dormir/morrer = 40):
+  sempre exatamente uma delas manda nas pálpebras. Olhar para baixo e vida baixa franzem só com a faixa cinza.
+- **Flicker no olho**: as pálpebras escondidas ficavam 0,01 atrás da face (disputa de profundidade);
+  agora ficam 0,1 para dentro da cabeça.
+- **Preto "vazado" acima da faixa** (bloquear, arco, luneta): nova capa cor de pelo `cobre_olho_R/L` sobre o
+  topo do olho pintado, escondida atrás da faixa no repouso (plano de 1 face só).
+- **Cauda com o corpo deitado** (nadar, rastejar, elytra): aponta para baixo, na direção dos pés.
+- **Botão "Esconder orelhas"** (alternável do CPM): liga/desliga as orelhas.
+
+## v16.22 (tufos grudados, transições suaves, rosto mais aberto)
 
 - `modelo/skin_v16.22.bbmodel`: **modelo atual** (cubos e textura idênticos à v16.21; visual parado conferido pixel a pixel).
 - `tools/v16_22_animacoes.py`: gera tudo. `previews/v16_22_transicao_agachar.gif`: transição ao agachar/levantar.
