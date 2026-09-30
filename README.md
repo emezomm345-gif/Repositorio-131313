@@ -1,8 +1,25 @@
 # Skin CPM – tufos de pelo
 
-## Versão atual: v16.25 (emotes finais + ignorar capacete)
+## Versão atual: v16.26 (últimos emotes)
 
-- `modelo/skin_v16.25.bbmodel` (+ `Emezomm-CPM_v16_25_128.png`): **modelo atual**. Geometria e textura idênticas
+- `modelo/skin_v16.26.bbmodel` (+ `Emezomm-CPM_v16_26_128.png`): **modelo atual**. Tudo da v16.25 idêntico
+  (geometria, textura e todas as animações — conferido); só foram adicionados 5 emotes.
+- `tools/v16_26_emotes.py`: gera tudo. `previews/v16_26_emotes.gif`: prévia dos emotes novos.
+
+### Emotes novos — todos contínuos (loop até você se mover, com entrada e saída suaves)
+- **Raiva** — inclinado pra frente, braços tensos, orelhas coladas pra trás, sobrancelhas franzidas, pelos e
+  cauda eriçados, cauda chicoteando, respiração pesada e focinho franzindo.
+- **Sentado no bloco** — fique em pé **na beirada de um bloco**, virado pra fora: ele senta no bloco, apoiado nas
+  mãos atrás, pernas balançando pra fora da beirada, cauda deitada no bloco e olhando em volta.
+- **Estalar o pescoco** — inclina a cabeça pra um lado (estalo), pro outro (estalo), gira o pescoço e solta os
+  ombros; a cada estalo os olhos apertam, as orelhas e os pelos dão um tranco.
+- **Super serio** — braços cruzados, olhar reto e fechado, orelhas um pouco pra trás, cauda parada.
+- **WTF** — cabeça puxada pra trás e inclinada, uma pálpebra levantada e a outra franzida, orelhas abertas
+  pros lados, olhar travado ("que porra é essa?").
+
+## v16.25 (emotes finais + ignorar capacete)
+
+- `modelo/skin_v16.25.bbmodel` (+ `Emezomm-CPM_v16_25_128.png`). Geometria e textura idênticas
   à v16.24; animações antigas idênticas (conferido), exceto as mudanças abaixo.
 - `tools/v16_25_emotes.py`: gera tudo. `previews/v16_25_emotes.gif`: prévia dos emotes novos.
 
