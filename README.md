@@ -7,5 +7,29 @@
 - `tools/build.py`: gera o modelo com tufos a partir do original (`python3 tools/build.py <original> <saida>`).
 - `tools/render.py`, `tools/zoom.py`: renderizador simples para prévias.
 
-Grupos novos: `fur_head_top`, `fur_head_back`, `fur_head_sides` (dentro de `head`) e `fur_chest` (dentro de `body`).
-Os sprites são pixel art simples desenhados à mão (`ART` em `tools/build.py`): 2 px por unidade (mesma densidade da skin), 3 tons chapados da paleta da skin (preto 16/24/36, branco 196/224/240), pontas em degrau e algumas falhas para simular pelo. Ficam em áreas da textura que nenhuma face usava (y 108–114).
+## Grupos e pivôs
+
+```
+head
+└─ fur_head            pivô (0, 24, 0)      = pivô da cabeça
+   ├─ fur_top          pivô (0, 32, -0.5)   topo da cabeça, 4 fileiras caindo para trás
+   ├─ fur_back         pivô (0, 29, 4)      nuca, 4 fileiras caindo para baixo
+   ├─ fur_side_R / _L  pivô (±4, 29.8, 1.2) laterais, 4 mechas cada
+   └─ fur_cheek_R / _L pivô (±4, 26, -2.2)  bochechas brancas, 3 mechas cada
+body
+└─ fur_chest           pivô (0, 24, -2.15)  = frente do peito
+   ├─ fur_chest_rows   pivô (0, 24.3, -2.15) 6 fileiras brancas descendo
+   └─ fur_chest_edge_R / _L                 2 mechas nas bordas
+```
+
+Cada mecha tem o pivô na **raiz** (onde encosta no corpo), então girar a mecha ou o grupo faz o pelo balançar a partir da base.
+
+## Textura
+
+Sprites em pixel art simples desenhados à mão (`ART` em `tools/build.py`), 2 px por unidade (mesma densidade da skin),
+mechas curtas levemente caídas, com os tons tirados da própria skin:
+
+- preto (cabeça): 19,19,19 · 24,23,23 · 31,30,28
+- branco (peito/bochechas): 215 · 232 · 244
+
+Ficam numa área da textura que nenhuma face usava (y 108–113).
