@@ -39,7 +39,8 @@ aplica qualquer um na hora.
   (+ `Emezomm-CPM_v16.28_CACADORES_256.png`), da skin `skin_CACADORES_64x64_original.png`. Pelo escuro verde (o
   branco continua branco: focinho, peito, dentro das orelhas, ponta da cauda). Na cabeça só os **óculos** em 3D
   (armação de bronze, lentes laranja, ponte e a alça cinza com fivela). **Bandana no pescoço**, toda em 3D com
-  relevo (como a referência): faixa em volta do pescoço logo abaixo do queixo, com bordas claras e losangos, e o
+  relevo (como a referência), em verdes-floresta do mesmo tom do pelo com borda e losangos verde-sálvia (como as
+  mangas): faixa em volta do pescoço logo abaixo do queixo, com bordas claras e losangos, e o
   triângulo no peito em degraus — camada de trás verde-clara (borda saltada) e camada da frente estampada,
   recuada — com um losango em relevo no centro. Presa ao corpo. Colete de couro com o peito do próprio Emezomm
   no decote (`--pelo`), mangas cinza, luvas pretas, cinto verde com fivela, calça marrom e botas, com a segunda

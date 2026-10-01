@@ -108,8 +108,9 @@ def bandana(w, h, seed=0, light_top=True):
 # neck bandana (reference: band around the neck under the chin, triangle on the chest with a light trim and
 # diamond motifs). Everything is 3D: the band is a ring around the neck, the triangle is two stepped layers
 # (light-green trim behind, darker printed cloth in front, inset -> raised border) and a raised diamond.
-BD = {'D': (0, 72, 20), 'd': (0, 92, 28), 'm': (0, 112, 36), 'T': (60, 160, 80), 't': (40, 132, 60),
-      'L': (130, 215, 140), 'S': (0, 52, 16)}
+BD = {  # forest greens in the same hue as the variant's fur, sage trim like the sleeves (harmonised palette)
+    'D': (18, 58, 34), 'd': (24, 72, 42), 'm': (36, 92, 56), 'T': (104, 152, 114), 't': (76, 124, 88),
+    'L': (156, 200, 162), 'S': (12, 40, 24)}
 
 
 def cloth(w, h, seed=0, diamonds=True):
