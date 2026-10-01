@@ -249,7 +249,7 @@ def lively_walk():
     def at(t):
         k = round(t, 4)
         if k not in memo:
-            memo[k] = upper_at(-2.0 * bob(t), 7.0 * twist(t), 3.2 * roll(t), drop=(0, -0.6 * bob(t), 0))
+            memo[k] = upper_at(-1.0 * bob(t), 3.5 * twist(t), 1.6 * roll(t), drop=(0, -0.3 * bob(t), 0))
         return memo[k]
     # only the body: a non-additive "rest" on the head or arms would also lock their vanilla rotation (look, swing)
     g.rot('body', lambda t: tuple(at(t)['body'][0]))
@@ -302,8 +302,8 @@ def cap_setups(maxd=0.1):
 strip(main_of('standing'), BODY)
 cap_setups()
 # running: sprint stride is 0.47 s (Minecraft caps the limb speed), bigger and bouncier, leaning forward
-w, cp = gait('Correndo', 'running', 0.47, legs_amp=52, arm_amp=40, twist=9, bob=0.6, roll=2.2, lean=-12,
-             arm_fwd=12, arm_out=5, head_fix=10, lift=2.0, tail_x=20)
+w, cp = gait('Correndo', 'running', 0.47, legs_amp=64, arm_amp=56, twist=13, bob=0.9, roll=3.0, lean=-18,
+             arm_fwd=16, arm_out=6, head_fix=15, lift=2.5, tail_x=24)
 install('running', w, cp, antic=0.0, over=0.0)
 # sneak walk: same reason as walking (moving detection) -> posture: paws low and forward, shoulders down
 posture('sneak_walk', 'Agachado andando - postura', arms=(12.0, 4.0), arm_y=-1.0, head=8.0)
@@ -381,6 +381,26 @@ for side, s in (('right', 1), ('left', -1)):
     an = Anim(pa['name'] + ' - braco', 'punch_' + side, 1.0, additive=False, priority=P_PUNCH)
     an.rot(me, lambda t, s=s: (vanilla_swing(t)[0] + 14 * reach_k(t), s * vanilla_swing(t)[1], vanilla_swing(t)[2]))
     emit(an)
+
+# ------------------------------------------------------------------ pain face (hurt, fire, freezing)
+# A face of pain, not a sad one: brows pulled down and together (inner ends down, like anger), eyes squeezed,
+# snout wrinkled, ears pinned back.
+PAIN = {'hurt': (16.0, -0.15, 0.45, 0.3), 'on_fire': (18.0, -0.16, 0.5, 0.35), 'freezing': (12.0, -0.12, 0.6, 0.15)}
+for typ, (tilt, lift, sup, inf) in PAIN.items():
+    m = main_of(typ)
+    strip(m, ('palp_R', 'palp_L', 'nariz'))
+    a = Anim('tmp_pain', typ, m['length'])
+    brows(a, lift=lift, tilt=tilt)
+    a.pos('nariz', c((0.0, 0.05, -0.02)))
+    merge_into(m, a)
+    lids = [x for x in EXISTING if x['cpm_type'] == typ and not x['cpm_additive']]
+    for x in lids:
+        EXISTING.remove(x)
+    L_ = Anim(m['name'] + ' - olhos', typ, m['length'], additive=False, priority=20)
+    for s_ in 'RL':
+        L_.scl('palp_sup_' + s_, c((1.0, sup, 1.0))).pos('palp_sup_' + s_, c((0.0, 0.0, -LID_FWD)))
+        L_.scl('palp_inf_' + s_, c((1.0, max(0.04, inf), 1.0))).pos('palp_inf_' + s_, c((0.0, 0.0, -LID_FWD)))
+    emit(L_)
 
 # ------------------------------------------------------------------ short entries
 # In CPM the main animations of a pose only start after its entry transition (p:<pose> setup); meanwhile the vanilla

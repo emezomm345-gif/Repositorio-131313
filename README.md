@@ -1,5 +1,15 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.41 — andar mais contido, corrida agressiva, cara de dor
+
+Arquivo atual: `modelo/variantes/LAST/skin_v16.41_LAST.bbmodel`.
+
+- **Andar:** o corpo (peito) balança bem menos, com metade do giro, da rolagem e do sobe e desce.
+- **Correr:** mais agressivo. Inclinação de −18°, passada e braçada maiores, giro de ombros e quique mais fortes,
+  cabeça firme olhando à frente.
+- **Machucado, pegando fogo e congelando:** cara de dor no lugar da cara triste. Sobrancelhas puxadas para baixo e
+  juntas (como raiva), olhos apertados, focinho franzido, orelhas para trás.
+
 ## L.A.S.T v16.40 — sem entradas nas poses que o CPM reinicia
 
 Arquivo atual: `modelo/variantes/LAST/skin_v16.40_LAST.bbmodel`.
