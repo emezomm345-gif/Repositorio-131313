@@ -49,13 +49,15 @@ aplica qualquer um na hora.
   - **Configuração "Oculos nos olhos"** (camada): ao ligar, as duas mãos sobem e **puxam os óculos para baixo**
     até os olhos (a alça aperta); ao desligar, empurram de volta para a testa. Vidro comum — nada brilha.
   - **Emotes de caçador** (objetos saem da manga e voltam; ficam escondidos dentro dos braços):
-    **Reconhecer o alvo** (tira o contrato enrolado e o **abre com as duas mãos** como um pergaminho — o rolinho
-    desce enquanto desenrola — olhando para o alvo; lê, compara olhando à frente, inclina a cabeça, acena curto e
-    enrola de volta), **Finalizando contrato** (abre do mesmo jeito, pega o carvão, risca o alvo, mostra o contrato
-    riscado com uma mão e enrola/guarda), **Jogar moeda** (loop até se mover: moeda de ouro maciça e detalhada,
+    **Reconhecer o alvo** (tira o contrato enrolado e o **abre na vertical com as duas mãos** — a esquerda segura
+    em cima e a direita puxa o rolinho para baixo — olhando para o alvo; lê, compara olhando à frente, inclina a
+    cabeça e confirma com um aceno curto e **cara séria**; enrola de volta), **Finalizando contrato** (abre do mesmo
+    jeito, pega o carvão, risca o alvo e mostra o contrato erguido com **raiva de vitória — "conseguimos, porra!"**:
+    soco no ar, aceno forte, sobrancelhas franzidas, orelhas coladas, focinho franzindo, pelo da cabeça eriçado e
+    cauda chicoteando; enrola e guarda), **Jogar moeda** (loop até se mover: moeda de ouro maciça e detalhada,
     preparação, peteleco, sobe bem alto girando e balançando, a cabeça e as orelhas acompanham, a mão sobe para
-    pegar e dá o tranco), **Saudacao do velho oeste** (mão na aba/têmpora, inclina a cabeça para a frente e
-    despede com a mão).
+    pegar e dá o tranco), **Saudacao do velho oeste** (mão na aba/têmpora, inclina a cabeça para a frente com
+    **expressão bem séria** e despede com a mão).
   - O contrato é maior (3,75 × 6, mostrado 1,3× maior), amarelado, rasgado, com cartaz, retrato, recompensa,
     texto e selo vermelho.
   - Também ficam: expressões (Raiva, Super serio, WTF, Tranquilidade), Alongamento, Estalar o pescoco e as
