@@ -203,37 +203,51 @@ INK, SEAL = (74, 46, 24), (168, 38, 28)
 
 
 def contract_front():
-    """12 x 16 px: aged, torn bounty contract -- header, portrait of the target, text lines, red seal."""
+    """15 x 24 px: aged, torn bounty contract -- header, portrait of the target, reward, text, red seal."""
     rng = np.random.default_rng(7)
-    a = np.zeros((16, 12, 4), np.uint8)
-    for y in range(16):
-        for x in range(12):
-            c = PAPER[0] if rng.random() > 0.25 else PAPER[1]
-            if x in (0, 11) or y in (0, 15):
+    W, H = 15, 24
+    a = np.zeros((H, W, 4), np.uint8)
+    for y in range(H):
+        for x in range(W):
+            c = PAPER[0] if rng.random() > 0.22 else PAPER[1]
+            if x in (0, W - 1) or y in (0, H - 1):
                 c = PAPER[2]
             a[y, x] = (*c, 255)
-    for x in range(2, 10):                                     # header "WANTED"
-        if x % 2 == 0 or x in (5,): a[1, x] = (*INK, 255)
-        a[2, x] = (*INK, 255) if x % 3 else (*PAPER[2], 255)
-    for y in range(4, 11):                                     # portrait frame
-        a[y, 2] = a[y, 9] = (*PAPER[3], 255)
-    a[4, 2:10] = a[10, 2:10] = (*PAPER[3], 255)
-    sil = ["........", "..#..#..", "..####..", ".######.", "..####..", ".######."]
+    for (cy, cx) in ((5, 12), (17, 2), (20, 10)):                 # stains
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                if abs(dy) + abs(dx) < 2: a[cy + dy, cx + dx] = (*PAPER[2], 255)
+    hdr = "#.#.##.#.#.##."                                            # header "PROCURADO"
+    for i, ch in enumerate(hdr):
+        if ch == '#': a[2, 1 + i] = (*INK, 255)
+        if i % 2 == 0 and ch == '#': a[3, 1 + i] = (*INK, 255)
+    a[4, 2:13] = (*PAPER[3], 255)
+    for y in range(6, 16):                                            # portrait frame
+        a[y, 3] = a[y, 11] = (*PAPER[3], 255)
+    a[6, 3:12] = a[15, 3:12] = (*PAPER[3], 255)
+    sil = [".#.....#.",
+           ".##...##.",
+           ".#######.",
+           "##.###.##",
+           ".#######.",
+           "..#####..",
+           "...###...",
+           ".#######."]
     for j, row in enumerate(sil):
         for i, ch in enumerate(row):
-            if ch == '#': a[5 + j - 1 if j else 5, 2 + i] = (*INK, 255) if j else a[5, 2 + i]
-    for j, row in enumerate(sil[1:]):
-        for i, ch in enumerate(row):
-            if ch == '#': a[5 + j, 2 + i] = (*INK, 255)
-    for y in (12, 13):                                         # text
-        for x in range(2, 10):
-            if (x + y) % 4: a[y, x] = (*PAPER[3], 255)
-    for y, x in ((13, 8), (13, 9), (14, 8), (14, 9), (14, 10)):  # seal
+            if ch == '#': a[7 + j, 3 + i] = (*INK, 255)
+    for x in (4, 5, 7, 8, 9, 10):                                     # reward "$ 5000"
+        a[17, x] = (*INK, 255)
+    a[18, 4] = (*INK, 255)
+    for y in (19, 20):
+        for x in range(2, 13):
+            if (x + 2 * y) % 5: a[y, x] = (*PAPER[3], 255)
+    for y, x in ((21, 10), (21, 11), (21, 12), (22, 10), (22, 11), (22, 12), (20, 11)):   # seal
         a[y, x] = (*SEAL, 255)
-    for y, x in ((0, 3), (0, 4), (0, 8), (3, 11), (4, 11), (8, 0), (15, 0), (15, 1), (14, 0), (15, 6)):  # torn bits
+    a[22, 2:7] = (*INK, 255)                                          # signature line
+    for y, x in ((0, 3), (0, 4), (0, 9), (0, 10), (0, 11), (1, 10), (9, 14), (10, 14), (11, 14), (23, 0),
+                 (23, 1), (22, 0), (23, 2), (23, 8), (23, 9), (14, 0)):                 # torn bits
         a[y, x] = (0, 0, 0, 0)
-    for y, x in ((1, 3), (1, 8), (3, 10), (9, 1), (14, 1)):
-        a[y, x] = (*PAPER[3], 255)
     return a
 
 
@@ -241,39 +255,23 @@ def contract_back(front):
     a = front[:, ::-1].copy()
     m = a[..., 3] > 0
     rng = np.random.default_rng(3)
-    for y in range(16):
-        for x in range(12):
+    for y in range(a.shape[0]):
+        for x in range(a.shape[1]):
             if m[y, x]:
                 c = PAPER[1] if rng.random() > 0.3 else PAPER[2]
-                if x in (0, 11) or y in (0, 15): c = PAPER[2]
+                if x in (0, a.shape[1] - 1) or y in (0, a.shape[0] - 1) or y == 12: c = PAPER[2]   # fold line
                 a[y, x] = (*c, 255)
     return a
 
 
-def knife_parts():
-    STEEL = {'H': (238, 242, 246), 'S': (196, 202, 210), 's': (150, 156, 164), 'B': (112, 70, 36),
-             'b': (86, 52, 26), 'w': (60, 36, 18), 'G': (186, 140, 80), 'g': (140, 100, 52)}
-    blade_side = grid([".H.", "HS.", "HSs", "HSs", "HSs", "HSs", "HSs", "HSs", "HSs", "HSs", "HSs", "HSs"], STEEL)
-    return [
-        ('faca_lamina', (5.875, 16.25, -0.375), (6.125, 19.25, 0.375),
-         {'north': grid(["."] + ["s"] * 11, STEEL), 'south': grid(["."] + ["s"] * 11, STEEL),
-          'east': blade_side, 'west': blade_side[:, ::-1].copy(), 'down': grid(["s", "s", "s"], STEEL)},
-         {'density': 4}),
-        ('faca_guarda', (5.5, 16.0, -0.5), (6.5, 16.25, 0.5),
-         {k: grid(["GGGG"], STEEL) for k in ('north', 'south', 'east', 'west')} |
-         {'up': grid(["GGGG"] * 4, STEEL), 'down': grid(["gggg"] * 4, STEEL)}, {'density': 4}),
-        ('faca_cabo', (5.75, 14.5, -0.25), (6.25, 16.0, 0.25),
-         {k: grid(["BB", "ww", "bb", "BB", "ww", "bb"], STEEL) for k in ('north', 'south', 'east', 'west')} |
-         {'down': grid(["gg", "gg"], STEEL)}, {'density': 4}),
-    ]
-
-
-def stone_parts():
-    ST = {'1': (120, 122, 126), '2': (96, 98, 102), '3': (150, 152, 156), '4': (76, 78, 82)}
-    return [('pedra_afiar', (-6.375, 18.0, -1.0), (-5.625, 18.5, 1.0),
-             {'north': grid(["333", "222"], ST), 'south': grid(["333", "222"], ST),
-              'east': grid(["31313131", "24242424"], ST), 'west': grid(["13131313", "42424242"], ST),
-              'up': grid(["313"] * 8, ST), 'down': grid(["424"] * 8, ST)}, {'density': 4})]
+def roll_parts():
+    """the rolled-up bottom of the contract (follows the bottom edge while it unrolls)"""
+    R = {'1': PAPER[0], '2': PAPER[1], '3': PAPER[2], '4': PAPER[3], 'i': INK}
+    side = grid(["1" * 15, "3" * 15], R)
+    end = grid(["34", "43"], R)
+    return [('contrato_rolo', (-7.875, 13.5, -0.25), (-4.125, 14.0, 0.25),
+             {'north': side, 'south': side, 'up': grid(["2" * 15, "1" * 15], R), 'down': grid(["3" * 15] * 2, R),
+              'east': end, 'west': end}, {'density': 4})]
 
 
 def charcoal_parts():
@@ -285,38 +283,28 @@ def charcoal_parts():
 
 
 def coin_parts():
-    CO = {'1': (255, 226, 120), '2': (232, 184, 64), '3': (184, 132, 36), '4': (130, 90, 20)}
-    face = grid(["2112", "1322", "2232", "3223"], CO)
-    edge = grid(["3", "2", "2", "3"], CO)
-    return [('moeda', (5.0, 20.0, -0.125), (6.0, 21.0, 0.125),
-             {'north': face, 'south': face[:, ::-1].copy(), 'east': edge, 'west': edge, 'up': grid(["2222"], CO),
-              'down': grid(["3333"], CO)}, {'density': 4, 'glow': True})]   # shines in the air
+    """solid gold coin, 1.25 across: rim, field and a stamped emblem; round look (cut corners)"""
+    CO = {'1': (255, 232, 140), '2': (236, 190, 72), '3': (196, 142, 40), '4': (150, 104, 26), '5': (110, 74, 16)}
+    face = grid([".334.",
+                 "32523",
+                 "35153",
+                 "32524",
+                 ".444."], CO)
+    edge = grid(["3", "2", "1", "2", "4"], CO)
+    return [('moeda', (5.0, 20.0, -0.125), (6.25, 21.25, 0.125),
+             {'north': face, 'south': face[:, ::-1].copy(), 'east': edge, 'west': edge,
+              'up': grid(["32123"], CO), 'down': grid(["44544"], CO)}, {'density': 4})]
 
 
 def stroke_parts():
-    INKS = {'r': (120, 24, 20), 'R': (160, 34, 26)}
-    return [('contrato_risco_traco', (-7.25, 15.5, 0.0), (-4.75, 15.75, 0.0),
-             {'north': grid(["rRRrRRrRRr"], INKS)}, {'density': 4, 'rotation': [0, 0, 32],
-                                                      'origin': [-7.25, 15.625, 0.0]})]
-
-
-def dust_parts(prefix, c):
-    DU = {'1': (196, 186, 166), '2': (168, 158, 140)}
-    cube = {k: np.array([[(*DU['1'], 150), (*DU['2'], 130)], [(*DU['2'], 130), (*DU['1'], 150)]], np.uint8)
-            for k in ('north', 'south', 'east', 'west', 'up', 'down')}
-    x, y, z = c
-    D4 = {'density': 4}
-    return [(prefix + '_1', (x - 0.5, y - 0.25, z - 0.25), (x, y + 0.25, z + 0.25), cube, D4),
-            (prefix + '_2', (x, y, z - 0.5), (x + 0.5, y + 0.5, z), cube, D4),
-            (prefix + '_3', (x - 0.25, y - 0.75, z), (x + 0.25, y - 0.25, z + 0.5), cube, D4)]
+    INKS = {'r': (60, 40, 30), 'R': (34, 26, 22)}
+    return [('contrato_risco_traco', (-7.0, 18.275, 0.0), (-4.25, 18.525, 0.0),
+             {'north': grid(["rRRrRRrRRrR"], INKS)}, {'density': 4})]
 
 
 def goggles(lens_front, lens_side, lens_top, lens_bot):
-    GL = {'o': (255, 150, 40), 'y': (255, 236, 160)}
-    glow = np.array([[(*GL['o'], 190)] * 10 for _ in range(8)], np.uint8)
-    glow[1:3, 1:4] = (*GL['y'], 220)
-    scan = np.array([[(*GL['y'], 235)] * 10], np.uint8)
-    g = [('head', 'acess_oculos', (0, 31.1, -4.5), [
+    """goggles on the forehead, tilted like the player's edit; plain glass (nothing glowing)"""
+    return [('head', 'acess_oculos', (0, 31.1, -4.5), [
             ('oculos_lente_R', (1.25, 30.1, -4.75), (3.75, 32.1, -4.25),
              {'north': lens_front, 'east': lens_side, 'west': lens_side, 'up': lens_top, 'down': lens_bot}),
             ('oculos_lente_L', (-3.75, 30.1, -4.75), (-1.25, 32.1, -4.25),
@@ -325,26 +313,16 @@ def goggles(lens_front, lens_side, lens_top, lens_bot):
             ('oculos_ponte', (-1.25, 30.85, -4.75), (1.25, 31.35, -4.25),
              {'north': rows(5, [BRONZE['2']]), 'up': rows(5, [BRONZE['3']]), 'down': rows(5, [BRONZE['1']])}),
          ], {'rotation': [25, 0, 0]}),
-         # strap in its own group (pivot at the front) so it can be shortened when the goggles go down
+         # strap in its own group (pivot at the front) so it can be tightened when the goggles go down
          ('acess_oculos', 'oculos_alca_g', (0, 31.1, -4.25), [
             ('oculos_alca', (-4.25, 30.6, -4.25), (4.25, 31.6, 5.25),
              {'north': strap(17, 2), 'south': strap(17, 2), 'east': strap(19, 2, buckle=True),
-              'west': strap(19, 2), 'down': rows(17, [STRAP[2]] * 19)})]),
-         # lens glow (visual effect of the "Oculos nos olhos" toggle): inside the lenses at rest
-         ('acess_oculos', 'oculos_brilho', (0, 31.1, -4.5), [
-            ('oculos_brilho_R', (1.25, 30.1, -4.5), (3.75, 32.1, -4.5), {'north': glow}, {'density': 4, 'glow': True}),
-            ('oculos_brilho_L', (-3.75, 30.1, -4.5), (-1.25, 32.1, -4.5), {'north': glow[:, ::-1].copy()},
-             {'density': 4, 'glow': True})]),
-         ('oculos_brilho', 'oculos_scan', (0, 31.9, -4.5), [
-            ('oculos_scan_R', (1.25, 31.85, -4.52), (3.75, 32.1, -4.52), {'north': scan}, {'density': 4, 'glow': True}),
-            ('oculos_scan_L', (-3.75, 31.85, -4.52), (-1.25, 32.1, -4.52), {'north': scan}, {'density': 4, 'glow': True})]),
-         ]
-    return g
+              'west': strap(19, 2), 'down': rows(17, [STRAP[2]] * 19)})])]
 
 
 def cacadores():
-    """Bounty hunters: goggles on the forehead (the player's tilted style) with a lens-glow effect, the neck
-    bandana like the reference (tip in its own group so it can swing) and the props of the emotes."""
+    """Bounty hunters: goggles on the forehead (the player's tilted style), the neck bandana like the reference
+    (tip in its own group so it can swing) and the props of the emotes (contract + roll, charcoal, coin)."""
     lens_front = grid(["33332",
                        "3HOO2",
                        "2OOD1",
@@ -353,16 +331,14 @@ def cacadores():
     lens_top, lens_bot = rows(5, [BRONZE['3']]), rows(5, [BRONZE['1']])
     front = contract_front()
     return goggles(lens_front, lens_side, lens_top, lens_bot) + bandana_pescoco() + [
-        ('right_arm', 'prop_faca', (6.0, 15.25, 0.0), knife_parts()),
         ('right_arm', 'prop_carvao', (6.75, 14.5, 0.0), charcoal_parts()),
-        ('right_arm', 'prop_moeda', (5.5, 20.5, 0.0), coin_parts()),
-        ('left_arm', 'prop_contrato', (-6.0, 14.0, 0.0), [
-            ('contrato_papel', (-7.5, 14.0, -0.05), (-4.5, 18.0, 0.05),
+        ('right_arm', 'prop_moeda', (5.625, 20.625, 0.0), coin_parts()),
+        # contract 3.75 x 6 (shown 1.3x bigger by the emotes); pivot = top edge, so it unrolls downwards
+        ('left_arm', 'prop_contrato', (-6.0, 20.0, 0.0), [
+            ('contrato_papel', (-7.875, 14.0, -0.05), (-4.125, 20.0, 0.05),
              {'north': front, 'south': contract_back(front)}, {'density': 4})]),
-        ('prop_contrato', 'contrato_risco', (-7.25, 15.625, 0.0), stroke_parts()),
-        ('left_arm', 'prop_pedra', (-6.0, 18.25, 0.0), stone_parts()),
-        ('body', 'poeira_ombro', (-3.0, 22.0, 0.0), dust_parts('poeira_ombro', (-3.0, 22.0, 0.0))),
-        ('body', 'poeira_peito', (0.5, 19.0, 0.0), dust_parts('poeira_peito', (0.5, 19.0, 0.0))),
+        ('prop_contrato', 'contrato_risco', (-7.0, 18.4, 0.0), stroke_parts(), {'rotation': [0, 0, -42]}),
+        ('left_arm', 'prop_rolo', (-6.0, 13.75, 0.0), roll_parts()),
     ]
 
 

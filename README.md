@@ -46,17 +46,21 @@ aplica qualquer um na hora.
     contorno claro por dentro e losangos, mais o losango em relevo no centro. A ponta fica num grupo próprio.
   - **Acessórios animados**: a ponta da bandana balança parada, sacode andando, esvoaça correndo/pulando/caindo;
     os óculos quicam com os passos e levantam nos pulos e quedas.
-  - **Configuração "Oculos nos olhos"** (camada): os óculos descem até os olhos, a alça aperta e as lentes
-    acendem (brilho laranja) com uma linha de varredura passando — fica ligado até desligar.
-  - **Emotes de caçador** (objetos saem da manga e voltam; ficam escondidos dentro dos braços/corpo):
-    **Reconhecer o alvo** (lê o contrato amarelado e rasgado, olha à frente, ergue o cartaz ao lado do rosto
-    comparando, inclina a cabeça e confirma com um aceno curto), **Encarar o horizonte** (mão protegendo os olhos,
-    olha de um lado ao outro, baixa o braço devagar), **Afiar a lâmina** (pedra na faca com calma, testa o fio com
-    o polegar, guarda na bainha da cintura), **Limpar a poeira** (bate no ombro e no peito, nuvens de poeira, ajeita
-    o casaco sem perder a pose), **Jogar moeda** (loop até se mover: moeda dourada brilhante gira no ar e a cabeça
-    acompanha), **Finalizando contrato** (puxa o contrato, risca com carvão, mostra o contrato riscado e guarda).
+  - **Configuração "Oculos nos olhos"** (camada): ao ligar, as duas mãos sobem e **puxam os óculos para baixo**
+    até os olhos (a alça aperta); ao desligar, empurram de volta para a testa. Vidro comum — nada brilha.
+  - **Emotes de caçador** (objetos saem da manga e voltam; ficam escondidos dentro dos braços):
+    **Reconhecer o alvo** (tira o contrato enrolado e o **abre com as duas mãos** como um pergaminho — o rolinho
+    desce enquanto desenrola — olhando para o alvo; lê, compara olhando à frente, inclina a cabeça, acena curto e
+    enrola de volta), **Finalizando contrato** (abre do mesmo jeito, pega o carvão, risca o alvo, mostra o contrato
+    riscado com uma mão e enrola/guarda), **Jogar moeda** (loop até se mover: moeda de ouro maciça e detalhada,
+    preparação, peteleco, sobe bem alto girando e balançando, a cabeça e as orelhas acompanham, a mão sobe para
+    pegar e dá o tranco), **Saudacao do velho oeste** (mão na aba/têmpora, inclina a cabeça para a frente e
+    despede com a mão).
+  - O contrato é maior (3,75 × 6, mostrado 1,3× maior), amarelado, rasgado, com cartaz, retrato, recompensa,
+    texto e selo vermelho.
   - Também ficam: expressões (Raiva, Super serio, WTF, Tranquilidade), Alongamento, Estalar o pescoco e as
-    configurações de orelha, cauda e capacete. Sem nada tecnológico (hologramas e bracelete removidos do modelo).
+    configurações de orelha, cauda e capacete. Sem nada tecnológico (hologramas e bracelete removidos do modelo,
+    óculos sem brilho). Retirados nesta variante: Limpar a poeira, Afiar a lâmina, Encarar o horizonte.
   - Gerar: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/CACADORES/skin_CACADORES_64x64_original.png modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel --fur verde --brow verde --acessorios cacadores --hide fur_chest --pelo body.north:0-4,body.south:0-1,body.up --emotes "Raiva,Super serio,WTF,Tranquilidade,Alongamento,Estalar o pescoco,Esconder orelhas,Esconder cauda,Ignorar capacete" --remove-props holo,bracelete`
     e depois `python3 tools/cacadores_emotes.py modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel`
     (`tools/animlib.py` = ferramentas de animação compartilhadas com o gerador principal).

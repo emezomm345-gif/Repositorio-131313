@@ -4,11 +4,11 @@ usage: python3 tools/cacadores_emotes.py <variant.bbmodel built by variante.py -
 
 - Accessories in motion: the bandana tip swings (idle sway, steps, wind when running / falling), the goggles bounce
   with the steps and jumps.
-- Toggle "Oculos nos olhos" (CPM layer): the goggles come down over the eyes, the strap tightens and the lenses
-  light up with a scanning line (visual effect), with smooth in/out.
-- Emotes (props come out of the sleeves and go back in; they rest hidden inside the arms / body):
-  Reconhecer o alvo, Encarar o horizonte, Afiar a lamina, Limpar a poeira (one-shot gestures),
-  Jogar moeda (loop until the player moves), Finalizando contrato (one-shot).
+- Toggle "Oculos nos olhos" (CPM layer): both hands pull the goggles down over the eyes (setup) and push them
+  back up to the forehead (finish); the strap tightens. Plain glass, nothing glowing (no tech in this universe).
+- Emotes (props come out of the sleeves and go back in; they rest hidden inside the arms):
+  Reconhecer o alvo and Finalizando contrato (the contract comes out rolled and is opened with both hands like a
+  scroll), Jogar moeda (loop until the player moves), Saudacao do velho oeste.
 """
 import json, sys, os, math
 import numpy as np
@@ -23,18 +23,16 @@ EXISTING = list(d['animations'])
 
 # ------------------------------------------------------------------ helpers
 HAND = {'right_arm': np.array([6.0, 11.6, 0.0]), 'left_arm': np.array([-6.0, 11.6, 0.0])}
-REST = {'prop_faca': (6.0, 15.25, 0.0), 'prop_carvao': (6.75, 14.5, 0.0), 'prop_moeda': (5.5, 20.5, 0.0),
-        'prop_contrato': (-6.0, 14.0, 0.0), 'prop_pedra': (-6.0, 18.25, 0.0)}
-ARM_OF = {'prop_faca': 'right_arm', 'prop_carvao': 'right_arm', 'prop_moeda': 'right_arm',
-          'prop_contrato': 'left_arm', 'prop_pedra': 'left_arm'}
+REST = {'prop_carvao': (6.75, 14.5, 0.0), 'prop_moeda': (5.625, 20.625, 0.0), 'prop_contrato': (-6.0, 20.0, 0.0),
+        'prop_rolo': (-6.0, 13.75, 0.0)}
+ARM_OF = {'prop_carvao': 'right_arm', 'prop_moeda': 'right_arm', 'prop_contrato': 'left_arm', 'prop_rolo': 'left_arm'}
+PAPER_W, PAPER_H, SC = 3.75, 6.0, 1.3          # contract size and how much bigger it is shown
 
 
 def reach(arm, target):
-    """arm rotation (euler) that puts the hand exactly on `target` (moved onto the arm's reach sphere)."""
+    """arm rotation (euler) that puts the hand on `target` (moved onto the arm's reach sphere)."""
     A = np.array(PIVOT[arm], float)
-    h = HAND[arm] - A
-    t = np.array(target, float) - A
-    return euler_zyx(R_to(h, t))
+    return euler_zyx(R_to(HAND[arm] - A, np.array(target, float) - A))
 
 
 def hand_world(arm, rot):
@@ -42,13 +40,46 @@ def hand_world(arm, rot):
     return A + rotmat(rot) @ (HAND[arm] - A)
 
 
-def held(prop, arm_rot, world_rot=np.eye(3), extra_world=(0, 0, 0)):
-    """(rot, pos) of a prop group so that it sits in the hand with a given WORLD orientation (+ a world offset)."""
-    arm = ARM_OF[prop]
+def place(prop, arm_rot, R, W):
+    """(rot, pos) of a prop group (child of its arm) so that its pivot is at world point W with world rotation R."""
+    A = np.array(PIVOT[ARM_OF[prop]], float)
     Ra = rotmat(arm_rot)
-    Rw = world_rot if isinstance(world_rot, np.ndarray) else rotmat(world_rot)
-    pos = HAND[arm] - np.array(REST[prop]) + Ra.T @ np.array(extra_world, float)
-    return euler_zyx(Ra.T @ Rw), tuple(pos)
+    return euler_zyx(Ra.T @ R), tuple(Ra.T @ (np.array(W, float) - A) + A - np.array(REST[prop]))
+
+
+def held(prop, arm_rot, R=np.eye(3), extra_world=(0, 0, 0)):
+    """prop in the hand with world rotation R (+ a world offset)"""
+    return place(prop, arm_rot, R, hand_world(ARM_OF[prop], arm_rot) + np.array(extra_world, float))
+
+
+def on_sphere(arm, x, y, z_sign=-1):
+    """point (x, y, z) in front of the body that a straight arm can reach exactly"""
+    A = np.array(PIVOT[arm], float)
+    r = np.linalg.norm(HAND[arm] - A)
+    dz2 = r * r - (x - A[0]) ** 2 - (y - A[1]) ** 2
+    return np.array([x, y, A[2] + z_sign * math.sqrt(max(0.0, dz2))])
+
+
+def contract(k, R, top_y=21.6, one_hand=None, spread=1.0):
+    """frame of the open contract held by both hands at its top corners.
+    k = how unrolled (0.08 rolled .. 1 open); R = world rotation of the paper (local -Z = printed side)."""
+    half = PAPER_W * SC / 2 * spread
+    # the corner held by the left hand is the one with the smaller world x
+    side = 1.0 if (R @ np.array([1.0, 0, 0]))[0] < 0 else -1.0     # local x of the left corner
+    lc = on_sphere('left_arm', -half if one_hand != 'show' else -6.4, top_y)
+    l = reach('left_arm', lc)
+    hl = hand_world('left_arm', l)
+    Wp = hl - R @ np.array([side * half, 0, 0])                    # top centre of the paper
+    rc = Wp + R @ np.array([-side * half, 0, 0])
+    out = {'left_arm': (l, Z3)}
+    if one_hand is None:
+        out['right_arm'] = (reach('right_arm', rc), Z3)
+    r_, p_ = place('prop_contrato', l, R, Wp)
+    out['prop_contrato'] = {'r': r_, 'p': p_, 's': (SC, SC * k, SC)}
+    bottom = Wp + R @ np.array([0, -PAPER_H * SC * k - 0.25 * SC, 0])
+    r2, p2 = place('prop_rolo', l, R, bottom)
+    out['prop_rolo'] = {'r': r2, 'p': p2, 's': (SC, SC, SC)}
+    return out
 
 
 def env(points):
@@ -80,201 +111,169 @@ a = Anim('Acessorios caindo', 'falling', 0.6)
 a.rot('bandana_ponta', lambda t: (22.0 + 6.0 * math.sin(2 * math.pi * t / 0.3), 0.0, 3.0 * math.sin(2 * math.pi * t / 0.6)))
 a.rot('acess_oculos', lambda t: (-6.0 + 1.5 * math.sin(2 * math.pi * t / 0.3), 0.0, 0.0))
 
-# ------------------------------------------------------------------ toggle: goggles over the eyes (visual effect)
-a = Anim('Oculos nos olhos', 'layer', 1.2)
-a.rot('acess_oculos', c((-25.0, 0.0, 0.0)))                  # upright
-a.pos('acess_oculos', c((0.0, -3.55, 0.0)))                  # lens centre on the eyes
-a.scl('oculos_alca_g', c((1.0, 1.0, 8.6 / 9.5)))             # strap tight around the head (no tilt any more)
-a.pos('oculos_brilho', c((0.0, 0.0, -0.3)))                  # glowing lenses come to the front
-a.pos('oculos_scan', lambda t: (0.0, -1.75 * (t / 1.2), 0.0))  # scanning line top -> bottom
+# ------------------------------------------------------------------ toggle: goggles over the eyes
+GOG_R, GOG_P, STRAP_S = (-25.0, 0.0, 0.0), (0.0, -3.55, 0.0), 8.6 / 9.5
+a = Anim('Oculos nos olhos', 'layer', 1.0)
+a.rot('acess_oculos', c(GOG_R))                              # upright, over the eyes
+a.pos('acess_oculos', c(GOG_P))
+a.scl('oculos_alca_g', c((1.0, 1.0, STRAP_S)))               # strap tight around the head
 ears(a, back=-6)
-staged_layer(a, 0.4)
+
+
+def gog(w):
+    return {'acess_oculos': {'r': tuple(x * w for x in GOG_R), 'p': tuple(x * w for x in GOG_P)},
+            'oculos_alca_g': {'s': (1.0, 1.0, 1 - (1 - STRAP_S) * w)}}
+
+
+def hands_at(y):
+    return {'right_arm': (reach('right_arm', (2.5, y, -5.4)), Z3), 'left_arm': (reach('left_arm', (-2.5, y, -5.4)), Z3)}
+
+
+st = Anim('g:Oculos nos olhos', 'setup', 1.1, loop='once')        # both hands pull the goggles down
+keyposes(st, [(0.0, gog(0)), (0.35, merge(gog(0), hands_at(31.6))), (0.75, merge(gog(1), hands_at(28.2))),
+              (1.1, gog(1))])
+ears(st, back=-6, fn=curve([(0, 0), (1.1, 1)]))
+st = Anim('g:Oculos nos olhos', 'finish', 1.1, loop='once')       # and push them back up to the forehead
+keyposes(st, [(0.0, gog(1)), (0.3, merge(gog(1), hands_at(28.2))), (0.75, merge(gog(0), hands_at(31.6))),
+              (1.1, gog(0))])
+ears(st, back=-6, fn=curve([(0, 1), (1.1, 0)]))
 
 # ------------------------------------------------------------------ Reconhecer o alvo
-a = Anim('Reconhecer o alvo', 'gesture', 7.4, loop='once')
-READ_L = reach('left_arm', (-1.6, 17.6, -7.4))
-CMP_L = reach('left_arm', (-8.6, 24.2, -9.4))          # arm out to the side, poster next to the face
-read_paper = rotmat((-32, 0, 0)) @ rotmat((0, 180, 0))       # printed side to the fox, top leaning away
-show_paper = rotmat((0, -18, 0))                             # printed side forward, turned a bit to the front
-P_READ = held('prop_contrato', READ_L, read_paper)
-P_CMP = held('prop_contrato', CMP_L, show_paper)
-read = {'left_arm': (READ_L, Z3), 'prop_contrato': P_READ, 'head': ((-22, 10, 0), Z3)}
+# takes the contract out rolled, opens it with both hands while looking at the target, compares, nods
+a = Anim('Reconhecer o alvo', 'gesture', 7.8, loop='once')
+R_READ = rotmat((-14, 0, 0)) @ rotmat((0, 180, 0))           # printed side to the fox, top leaning away
+look_far, look_down = ((3, -5, 0), Z3), ((-17, 2, 0), Z3)
 keyposes(a, [
     (0.0, {}),
-    (0.8, read),
-    (1.6, merge(read, {'head': ((-24, 6, 0), Z3)})),
-    (2.3, merge(read, {'head': ((-20, 12, 0), Z3)})),
-    (2.7, merge(read, {'head': ((2, -4, 0), Z3)})),                       # glance forward
-    (3.3, merge(read, {'head': ((-20, 10, 0), Z3)})),                     # back to the contract
-    (4.1, {'left_arm': (CMP_L, Z3), 'prop_contrato': P_CMP, 'head': ((1, -6, 0), Z3)}),   # compares
-    (5.0, {'left_arm': (CMP_L, Z3), 'prop_contrato': P_CMP, 'head': ((1, -6, 12), Z3)}),  # tilts the head
-    (5.5, {'left_arm': (CMP_L, Z3), 'prop_contrato': P_CMP, 'head': ((-11, -4, 4), Z3)}), # short nod
-    (5.75, {'left_arm': (CMP_L, Z3), 'prop_contrato': P_CMP, 'head': ((3, -4, 2), Z3)}),
-    (6.0, {'left_arm': (CMP_L, Z3), 'prop_contrato': P_CMP, 'head': ((0, -3, 0), Z3)}),
-    (6.7, {'left_arm': ((-10, 0, -4), Z3)}),
-    (7.4, {})])
-e_ = env([(0, 0), (0.8, 1), (6.4, 1), (7.4, 0)])
+    (0.7, merge(contract(0.08, R_READ, 20.6, spread=0.6), {'head': ((-6, 0, 0), Z3)})),     # out, rolled
+    (1.6, merge(contract(1.0, R_READ), {'head': look_far})),                               # opens it, eyes on the target
+    (2.4, merge(contract(1.0, R_READ), {'head': look_down})),                              # reads
+    (3.1, merge(contract(1.0, R_READ), {'head': ((-15, -3, 0), Z3)})),
+    (3.5, merge(contract(1.0, R_READ), {'head': look_far})),                               # target
+    (4.0, merge(contract(1.0, R_READ), {'head': look_down})),                              # contract
+    (4.5, merge(contract(1.0, R_READ, 21.0), {'head': ((2, -6, 0), Z3)})),                 # target again
+    (5.1, merge(contract(1.0, R_READ, 21.0), {'head': ((2, -6, 12), Z3)})),                # tilts the head
+    (5.5, merge(contract(1.0, R_READ, 21.0), {'head': ((-11, -4, 4), Z3)})),               # short nod
+    (5.75, merge(contract(1.0, R_READ, 21.0), {'head': ((3, -4, 2), Z3)})),
+    (6.0, merge(contract(1.0, R_READ, 21.0), {'head': ((0, -3, 0), Z3)})),
+    (6.7, merge(contract(0.08, R_READ, 20.6, spread=0.6), {'head': ((-4, 0, 0), Z3)})),    # rolls it up
+    (7.3, {'left_arm': ((-12, 0, -4), Z3), 'right_arm': ((-12, 0, 4), Z3)}),               # back in the sleeve
+    (7.8, {})])
+e_ = env([(0, 0), (0.7, 1), (6.7, 1), (7.8, 0)])
 ears_fn(a, fn_back=lambda t: -10 * e_(t) + 8 * twitch([5.5], 0.3)(t), fn_twist=lambda t: -6 * e_(t))
 brows(a, lift=-0.05, tilt=5, fn=e_)
+down_k = curve([(0, 0), (1.6, 0), (2.4, 1), (3.1, 1), (3.5, 0), (4.0, 1), (4.5, 0), (7.8, 0)])
 for s in 'RL':
-    a.pos('iris_' + s, lambda t: (0.0, -0.14 * curve([(0, 0), (0.8, 1), (2.5, 1), (2.7, 0), (3.2, 0), (3.3, 1),
-                                                      (3.9, 1), (4.1, 0), (7.4, 0)])(t), 0.0))
-tail_wave(a, 3.0, 2.4)
-
-# ------------------------------------------------------------------ Encarar o horizonte
-a = Anim('Encarar o horizonte', 'gesture', 6.2, loop='once')
-VISOR = reach('right_arm', (2.0, 32.6, -6.6))          # hand above the goggles, shading the eyes
-vis = lambda yaw: {'right_arm': (VISOR, Z3), 'head': ((6, yaw, 0), Z3), 'body': ((-2, 0, 0), Z3)}
-keyposes(a, [(0.0, {}), (0.9, vis(14)), (2.0, vis(14)), (3.4, vis(-14)), (4.2, vis(-14)), (4.7, vis(0)),
-             (6.2, {})], ease=smooth)
-e_ = env([(0, 0), (0.9, 1), (4.7, 1), (6.2, 0)])
-ears_fn(a, fn_back=lambda t: -14 * e_(t), fn_twist=lambda t: -8 * e_(t))
-brows(a, lift=-0.1, tilt=6, fn=e_)                           # squinting at the distance
-tail_pose(a, rx=(8, 2, 0, 0, 0), fn=e_)
-
-# ------------------------------------------------------------------ Afiar a lamina
-a = Anim('Afiar a lamina', 'gesture', 8.6, loop='once')
-K_HAND = (1.6, 15.2, -6.4)
-KNIFE_R = reach('right_arm', K_HAND)
-blade_dir = norm((-1.0, 0.12, -0.18))
-knife_world = R_to((0, 1, 0), blade_dir)
-P_KNIFE = held('prop_faca', KNIFE_R, knife_world)
-Hk = hand_world('right_arm', KNIFE_R)
-
-
-def stone_at(u, lift=0.35):
-    """left arm + stone so that the stone sits on the blade at fraction u (0 = base, 1 = tip)"""
-    T = Hk + blade_dir * (1.4 + 2.4 * u) + np.array([0, lift, 0])
-    r = reach('left_arm', T)
-    return {'left_arm': (r, Z3), 'prop_pedra': held('prop_pedra', r, rotmat((0, 90, 0)) @ R_to((0, 0, 1), blade_dir))}
-
-
-knife = {'right_arm': (KNIFE_R, Z3), 'prop_faca': P_KNIFE, 'head': ((-26, 4, 0), Z3)}
-frames = [(0.0, {}), (0.9, merge(knife, stone_at(0.0, 0.8)))]
-t0 = 1.3
-for k in range(4):                                            # four calm strokes base -> tip
-    frames.append((t0, merge(knife, stone_at(0.0))))
-    frames.append((t0 + 0.6, merge(knife, stone_at(1.0))))
-    frames.append((t0 + 0.9, merge(knife, stone_at(0.5, 0.9))))
-    t0 += 0.95
-THUMB = reach('left_arm', Hk + blade_dir * 2.6 + np.array([0, -0.15, -0.5]))
-thumb = {'left_arm': (THUMB, Z3), 'prop_pedra': held('prop_pedra', THUMB, rotmat((0, 90, 0)))}
-SHEATH = reach('right_arm', (4.6, 12.6, -2.6))
-frames += [(5.3, merge(knife, thumb, {'head': ((-24, 8, 0), Z3)})),               # tests the edge
-           (5.6, merge(knife, thumb, {'head': ((-22, 8, 0), Z3)})),
-           (6.1, merge(knife, {'left_arm': ((-8, 0, -6), Z3), 'head': ((-6, 0, 0), Z3)})),   # satisfied
-           (6.9, {'right_arm': (SHEATH, Z3), 'prop_faca': held('prop_faca', SHEATH, rotmat((180, 0, 0))),
-                  'head': ((-14, -14, 0), Z3)}),                                   # into the sheath
-           (7.6, {'right_arm': (SHEATH, Z3), 'head': ((-8, -8, 0), Z3)}),
-           (8.6, {})]
-keyposes(a, frames)
-e_ = env([(0, 0), (0.9, 1), (7.6, 1), (8.6, 0)])
-ears_fn(a, fn_back=lambda t: -8 * e_(t) + 18 * twitch([5.45], 0.3)(t), fn_twist=lambda t: -5 * e_(t))
-brows(a, lift=-0.06, tilt=3, fn=e_)
-tail_wave(a, 2.5, 2.8)
-
-# ------------------------------------------------------------------ Limpar a poeira
-a = Anim('Limpar a poeira', 'gesture', 4.4, loop='once')
-SLV = (-4.6, 19.4, -3.1)
-CH_L, CH_R = (-2.3, 15.4, -2.7), (2.3, 15.4, -2.7)
-r_slv, r_slv_in = reach('right_arm', SLV), reach('right_arm', (-4.3, 19.4, -2.5))
-r_ch, r_ch_in = reach('right_arm', CH_L), reach('right_arm', (-2.3, 15.4, -2.3))
-l_ch, l_ch_in = reach('left_arm', CH_R), reach('left_arm', (2.3, 15.4, -2.3))
-proud = {'head': ((7, 0, 0), Z3), 'body': ((-2, 0, 0), Z3)}
-keyposes(a, [
-    (0.0, {}),
-    (0.45, merge(proud, {'right_arm': (r_slv, Z3), 'head': ((-6, 18, 0), Z3)})),
-    (0.6, merge(proud, {'right_arm': (r_slv_in, Z3), 'head': ((-6, 18, 0), Z3)})),     # pat
-    (0.78, merge(proud, {'right_arm': (r_slv, Z3), 'head': ((-6, 18, 0), Z3)})),
-    (0.93, merge(proud, {'right_arm': (r_slv_in, Z3), 'head': ((-6, 18, 0), Z3)})),    # pat
-    (1.35, merge(proud, {'right_arm': (r_ch, Z3), 'left_arm': (l_ch, Z3), 'head': ((-10, 0, 0), Z3)})),
-    (1.5, merge(proud, {'right_arm': (r_ch_in, Z3), 'left_arm': (l_ch, Z3), 'head': ((-10, 0, 0), Z3)})),
-    (1.68, merge(proud, {'right_arm': (r_ch, Z3), 'left_arm': (l_ch_in, Z3), 'head': ((-10, 0, 0), Z3)})),
-    (1.86, merge(proud, {'right_arm': (r_ch_in, Z3), 'left_arm': (l_ch, Z3), 'head': ((-10, 0, 0), Z3)})),
-    (2.04, merge(proud, {'right_arm': (r_ch, Z3), 'left_arm': (l_ch_in, Z3), 'head': ((-10, 0, 0), Z3)})),
-    (2.5, merge(proud, {'right_arm': ((6, 0, 6), (0, -0.5, 0)), 'left_arm': ((6, 0, -6), (0, -0.5, 0))})),  # tug
-    (2.8, merge(proud, {'right_arm': ((0, 0, 4), Z3), 'left_arm': ((0, 0, -4), Z3)})),
-    (3.6, proud),
-    (4.4, {})])
-
-
-def dust_puff(a, group, times, rest, at, drift=(-0.3, 1.1, -0.9)):
-    pts_p, pts_s = [(0, Z3)], [(0, (1, 1, 1))]
-    for t0 in times:
-        p0 = tuple(np.subtract(at, rest))
-        p1 = tuple(np.add(p0, drift))
-        # each puff lives 0.3 s (pats are >= 0.33 s apart, so the keys never interleave)
-        pts_p += [(t0 - 0.01, Z3), (t0, p0), (t0 + 0.3, p1), (t0 + 0.31, Z3)]
-        pts_s += [(t0 - 0.01, (0.02, 0.02, 0.02)), (t0, (0.5, 0.5, 0.5)), (t0 + 0.1, (1.9, 1.9, 1.9)),
-                  (t0 + 0.3, (0.3, 0.3, 0.3)), (t0 + 0.31, (1, 1, 1))]
-    pts_p.append((a.length, Z3)); pts_s.append((a.length, (1, 1, 1)))
-    a.pos(group, curve(pts_p, ease=lambda x: x))
-    a.scl(group, curve(pts_s, ease=lambda x: x))
-
-
-dust_puff(a, 'poeira_ombro', [0.6, 0.93], (-3.0, 22.0, 0.0), (-6.2, 21.9, -2.6))     # beside the patting hand
-dust_puff(a, 'poeira_peito', [1.5, 1.86], (0.5, 19.0, 0.0), (0.0, 18.4, -2.9))
-e_ = env([(0, 0), (0.45, 1), (3.6, 1), (4.4, 0)])
-brows(a, lift=0.04, tilt=-3, fn=e_)
-ears_fn(a, fn_back=lambda t: -6 * e_(t) + 10 * twitch([0.6, 1.5], 0.25)(t))
-tail_wave(a, 6.0, 1.1)
-
-# ------------------------------------------------------------------ Jogar moeda (loop until the player moves)
-L_COIN = 1.8
-a = Anim('Jogar moeda', 'custom_pose', L_COIN)
-COIN_ARM = reach('right_arm', (2.2, 15.8, -6.6))
-flick = curve([(0, 0), (0.08, 0), (0.16, -7), (0.3, 0), (1.38, 0), (1.46, 5), (1.6, 0), (L_COIN, 0)])
-def up(t):
-    u = (t - 0.14) / 1.24
-    return 6.2 * 4 * u * (1 - u) if 0 <= u <= 1 else 0.0
-
-spin = lambda t: 900 * min(1.0, max(0.0, (t - 0.14) / 1.24))
-a.rot('right_arm', lambda t: tuple(np.add(COIN_ARM, (flick(t), 0, 0))))
-a.rot('prop_moeda', lambda t: held('prop_moeda', COIN_ARM, rotmat((90 + spin(t), 0, 0)))[0])
-a.pos('prop_moeda', lambda t: held('prop_moeda', COIN_ARM, np.eye(3), (0, 0.45 + up(t), 0))[1])
-a.rot('head', lambda t: (-8 + 3.0 * up(t), 0.0, 0.0))     # follows the coin
-for s in 'RL':
-    a.pos('iris_' + s, lambda t: (0.0, -0.1 + 0.045 * up(t), 0.0))
-brows(a, lift=0.04, tilt=-3)
-ears_fn(a, fn_twist=lambda t: 12 * twitch([1.45], 0.3)(t), side='R')
-tail_wave(a, 4.0, 1.8)
-staged_custom(a, 0.5)
+    a.pos('iris_' + s, lambda t: (0.0, -0.14 * down_k(t), 0.0))
+tail_wave(a, 3.0, 2.6)
 
 # ------------------------------------------------------------------ Finalizando contrato
-a = Anim('Finalizando contrato', 'gesture', 7.4, loop='once')
-DESK_L = reach('left_arm', (-1.4, 16.6, -7.4))
-desk_paper = rotmat((-58, 0, 0)) @ rotmat((0, 180, 0))       # almost flat, printed side up to the fox
-P_DESK = held('prop_contrato', DESK_L, desk_paper)
-Hp = hand_world('left_arm', DESK_L)
-paper_centre = Hp + rotmat((-58, 0, 0)) @ rotmat((0, 180, 0)) @ np.array([0, 2.0, 0])
-pen = lambda dx, dy: reach('right_arm', paper_centre + np.array([dx, 1.6 + dy, 0.4]))
-pen_rot = lambda r: held('prop_carvao', r, rotmat((160, 0, 0)))
-write = {'left_arm': (DESK_L, Z3), 'prop_contrato': P_DESK, 'head': ((-30, 6, 0), Z3)}
-SHOW_L = reach('left_arm', (-8.6, 24.2, -9.4))
-P_SHOW = held('prop_contrato', SHOW_L, rotmat((0, -18, 0)))
-r0, r1 = pen(-1.4, 0.9), pen(1.2, -0.9)
+# opens the contract with both hands, strikes the target off with charcoal, shows it and rolls it up
+a = Anim('Finalizando contrato', 'gesture', 9.0, loop='once')
+open_ = contract(1.0, R_READ)
+l_open = open_['left_arm'][0]
+hl = hand_world('left_arm', l_open)
+side = 1.0 if (R_READ @ np.array([1.0, 0, 0]))[0] < 0 else -1.0
+Wp = hl - R_READ @ np.array([side * PAPER_W * SC / 2, 0, 0])
+
+
+def paper_point(lx, ly):
+    """world point of a paper-local point (rest coordinates) when the contract is open"""
+    return Wp + R_READ @ (SC * (np.array([lx, ly, 0.0]) - np.array(REST['prop_contrato'])))
+
+
+S0, S1 = paper_point(-7.0, 18.4), paper_point(-7.0 + 2.75 * math.cos(math.radians(42)),
+                                              18.4 - 2.75 * math.sin(math.radians(42)))
+TOWARD = R_READ @ np.array([0, 0, -1.0])                        # printed side normal (towards the fox)
+
+
+def pen_at(P):
+    r = reach('right_arm', P + TOWARD * 1.6)
+    h = hand_world('right_arm', r)
+    return {'right_arm': (r, Z3), 'prop_carvao': place('prop_carvao', r, R_to((0, 1, 0), P - h), h)}
+
+
+SHOW = contract(1.0, rotmat((0, -14, 0)), 22.6, one_hand='show')   # printed side forward, left hand only
+read_f = merge(open_, {'head': look_down})
 keyposes(a, [
     (0.0, {}),
-    (0.8, write),
-    (1.5, merge(write, {'right_arm': (r0, Z3), 'prop_carvao': pen_rot(r0)})),
-    (2.6, merge(write, {'right_arm': (r0, Z3), 'prop_carvao': pen_rot(r0)})),
-    (3.4, merge(write, {'right_arm': (r1, Z3), 'prop_carvao': pen_rot(r1)})),     # the strike
-    (3.9, merge(write, {'right_arm': ((-20, 0, 6), Z3), 'head': ((-22, 0, 0), Z3)})),
-    (4.7, {'left_arm': (SHOW_L, Z3), 'prop_contrato': P_SHOW, 'head': ((0, -10, 4), Z3)}),   # shows it: done
-    (5.5, {'left_arm': (SHOW_L, Z3), 'prop_contrato': P_SHOW, 'head': ((-4, -10, 4), Z3)}),
-    (6.3, {'left_arm': ((-14, 0, -4), Z3), 'prop_contrato': {'s': (1, 0.3, 1)}}),          # folds and stores
-    (7.4, {})])
-a.pos('contrato_risco', curve([(0, (0, 0, 0)), (2.55, (0, 0, 0)), (2.6, (0, 0, -0.07)), (6.3, (0, 0, -0.07)),
-                               (6.35, (0, 0, 0)), (7.4, (0, 0, 0))], ease=lambda x: x))
-a.scl('contrato_risco', curve([(0, (1, 1, 1)), (2.55, (1, 1, 1)), (2.6, (0.02, 1, 1)), (3.4, (1, 1, 1)),
-                               (7.4, (1, 1, 1))]))
-e_ = env([(0, 0), (0.8, 1), (6.3, 1), (7.4, 0)])
-done = env([(0, 0), (3.4, 0), (3.9, 1), (6.3, 1), (7.4, 0)])
+    (0.7, merge(contract(0.08, R_READ, 20.6, spread=0.6), {'head': ((-6, 0, 0), Z3)})),
+    (1.6, merge(open_, {'head': look_far})),                                          # opens it, looks at the target
+    (2.3, read_f),
+    (2.8, merge(read_f, {'right_arm': ((-30, 0, 10), Z3)})),                          # right hand takes the charcoal
+    (3.3, merge(read_f, pen_at(S0))),
+    (4.2, merge(read_f, pen_at(S1))),                                                 # the strike
+    (4.7, merge(read_f, {'right_arm': ((-20, 0, 8), Z3), 'head': ((-10, 0, 0), Z3)})),
+    (5.6, merge(SHOW, {'head': ((2, -8, 3), Z3)})),                                   # shows it: done
+    (6.4, merge(SHOW, {'head': ((-6, -8, 3), Z3)})),
+    (6.8, merge(SHOW, {'head': ((0, -6, 0), Z3)})),
+    (7.6, merge(contract(0.08, R_READ, 20.6, spread=0.6), {'head': ((-4, 0, 0), Z3)})),
+    (8.3, {'left_arm': ((-12, 0, -4), Z3), 'right_arm': ((-12, 0, 4), Z3)}),
+    (9.0, {})])
+a.pos('contrato_risco', curve([(0, (0, 0, 0)), (3.25, (0, 0, 0)), (3.3, (0, 0, -0.07)), (7.5, (0, 0, -0.07)),
+                               (7.55, (0, 0, 0)), (9.0, (0, 0, 0))], ease=lambda x: x))
+a.scl('contrato_risco', curve([(0, (1, 1, 1)), (3.25, (1, 1, 1)), (3.3, (0.02, 1, 1)), (4.2, (1, 1, 1)),
+                               (9.0, (1, 1, 1))]))
+e_ = env([(0, 0), (0.7, 1), (7.6, 1), (9.0, 0)])
+done = env([(0, 0), (4.2, 0), (4.7, 1), (7.6, 1), (9.0, 0)])
 brows(a, lift=-0.04, tilt=4, fn=lambda t: e_(t) * (1 - done(t)))
 brows(a, lift=0.05, tilt=-4, fn=done)
 ears_fn(a, fn_back=lambda t: -8 * e_(t) - 6 * done(t), fn_twist=lambda t: -6 * e_(t))
 for i, b in enumerate(TAIL):
     a.rot(b, lambda t, i=i: (0.0, 10 * 1.1 ** i * math.sin(2 * math.pi * (t / 0.55 - 0.12 * i)) * done(t), 0.0))
+
+# ------------------------------------------------------------------ Jogar moeda (loop until the player moves)
+L_COIN = 2.6
+a = Anim('Jogar moeda', 'custom_pose', L_COIN)
+COIN_ARM = reach('right_arm', on_sphere('right_arm', 2.0, 16.6))
+T0, T1, H_UP = 0.32, 2.0, 13.0                                  # launch, catch, height above the hand
+arm_k = curve([(0, 0), (0.2, 7), (0.32, -11), (0.5, 0), (1.85, 0), (1.98, -6), (2.08, 6), (2.3, 0), (L_COIN, 0)])
+
+
+def flight(t):
+    return min(1.0, max(0.0, (t - T0) / (T1 - T0)))
+
+
+def up(t):
+    u = flight(t)
+    return H_UP * 4 * u * (1 - u) if T0 <= t <= T1 else 0.0
+
+
+def coin_rot(t):
+    u = flight(t)
+    spin = 1620 * (u * u * (3 - 2 * u))                             # fast after the flick, slowing at the catch
+    wob = 18 * math.sin(2 * math.pi * 2.5 * u) * (1 - u)
+    return rotmat((90 + spin, 0, wob))
+
+
+a.rot('right_arm', lambda t: tuple(np.add(COIN_ARM, (arm_k(t), 0, 0))))
+a.rot('prop_moeda', lambda t: held('prop_moeda', np.add(COIN_ARM, (arm_k(t), 0, 0)), coin_rot(t))[0])
+a.pos('prop_moeda', lambda t: held('prop_moeda', np.add(COIN_ARM, (arm_k(t), 0, 0)), np.eye(3),
+                                   (0, 0.5 + up(t), 0))[1])
+a.rot('head', lambda t: (-12 + 2.6 * up(t), 0.0, 0.0))          # follows the coin up and down
+for s in 'RL':
+    a.pos('iris_' + s, lambda t: (0.0, -0.12 + 0.025 * up(t), 0.0))
+ears_fn(a, fn_back=lambda t: -0.8 * up(t), fn_twist=lambda t: 12 * twitch([2.05], 0.3)(t), side='RL')
+brows(a, lift=0.03, tilt=-3)
+tail_wave(a, 4.0, 2.6)
+staged_custom(a, 0.5)
+
+# ------------------------------------------------------------------ Saudacao do velho oeste
+# hand to the brim (the goggles), head tipped forward a little, then a small wave off
+a = Anim('Saudacao do velho oeste', 'gesture', 3.2, loop='once')
+BRIM = reach('right_arm', (3.7, 33.2, -5.2))                 # at the temple, like tipping a hat
+OFF = reach('right_arm', on_sphere('right_arm', 9.5, 27.0))
+keyposes(a, [
+    (0.0, {}),
+    (0.5, {'right_arm': (BRIM, Z3), 'head': ((-4, -6, 0), Z3)}),
+    (0.9, {'right_arm': (BRIM, Z3), 'head': ((-14, -6, 4), Z3), 'body': ((-4, 0, 0), Z3)}),   # tips the head
+    (1.6, {'right_arm': (BRIM, Z3), 'head': ((-12, -6, 4), Z3), 'body': ((-3, 0, 0), Z3)}),
+    (2.1, {'right_arm': (OFF, Z3), 'head': ((0, -4, 0), Z3)}),                                # hand off, forward
+    (3.2, {})])
+e_ = env([(0, 0), (0.5, 1), (2.1, 1), (3.2, 0)])
+ears_fn(a, fn_back=lambda t: 12 * curve([(0, 0), (0.9, 1), (1.6, 1), (2.1, 0), (3.2, 0)])(t) - 6 * e_(t))
+brows(a, lift=0.04, tilt=-3, fn=e_)
+tail_wave(a, 8.0, 0.8)
 
 # ------------------------------------------------------------------ save (new animations after the existing ones)
 order = {}
