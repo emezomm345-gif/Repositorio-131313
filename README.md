@@ -37,19 +37,34 @@ aplica qualquer um na hora.
 
 - **Caçadores de recompensas** (variante verde) — `modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel`
   (+ `Emezomm-CPM_v16.28_CACADORES_256.png`), da skin `skin_CACADORES_64x64_original.png`. Pelo escuro verde (o
-  branco continua branco: focinho, peito, dentro das orelhas, ponta da cauda). Na cabeça só os **óculos** em 3D
-  (armação de bronze, lentes laranja, ponte e a alça cinza com fivela). **Bandana no pescoço**, toda em 3D com
-  relevo (como a referência), em verdes-floresta do mesmo tom do pelo com borda e losangos verde-sálvia (como as
-  mangas): faixa em volta do pescoço logo abaixo do queixo, com bordas claras e losangos, e o
-  triângulo no peito em degraus — camada de trás verde-clara (borda saltada) e camada da frente estampada,
-  recuada — com um losango em relevo no centro. Presa ao corpo. Colete de couro com o peito do próprio Emezomm
-  no decote (`--pelo`), mangas cinza, luvas pretas, cinto verde com fivela, calça marrom e botas, com a segunda
-  camada. **Sobrancelha verde** (faixa verde-escura com contorno verde vivo, combinando com o pelo).
-  **Emotes desta variante:** só as expressões (Raiva, Super serio, WTF, Tranquilidade), Alongamento e Estalar o
-  pescoco, mais as configurações (Esconder orelhas, Esconder cauda, Ignorar capacete); os outros emotes e os
-  objetos tecnológicos deles (hologramas, bracelete) foram retirados.
-  Tufos do peito escondidos pelo colete. Prévia: `previews/variante_CACADORES.png`.
-  Comando: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/CACADORES/skin_CACADORES_64x64_original.png modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel --fur verde --brow verde --acessorios cacadores --hide fur_chest --pelo body.north:0-4,body.south:0-1,body.up --emotes "Raiva,Super serio,WTF,Tranquilidade,Alongamento,Estalar o pescoco,Esconder orelhas,Esconder cauda,Ignorar capacete" --remove-props holo,bracelete`
+  branco continua branco), sobrancelha verde, colete de couro com o peito do Emezomm no decote, mangas cinza,
+  luvas, cinto e botas, com a segunda camada. Prévias: `previews/variante_CACADORES.png` e
+  `previews/variante_CACADORES_emotes.gif`.
+  - **Óculos** no estilo do ajuste enviado (inclinados 25° no alto da testa, alça descendo até a nuca). A alça
+    tem grupo próprio para apertar quando os óculos descem.
+  - **Bandana no pescoço** como a referência: faixa com losangos e o **triângulo liso** com borda escura,
+    contorno claro por dentro e losangos, mais o losango em relevo no centro. A ponta fica num grupo próprio.
+  - **Acessórios animados**: a ponta da bandana balança parada, sacode andando, esvoaça correndo/pulando/caindo;
+    os óculos quicam com os passos e levantam nos pulos e quedas.
+  - **Configuração "Oculos nos olhos"** (camada): os óculos descem até os olhos, a alça aperta e as lentes
+    acendem (brilho laranja) com uma linha de varredura passando — fica ligado até desligar.
+  - **Emotes de caçador** (objetos saem da manga e voltam; ficam escondidos dentro dos braços/corpo):
+    **Reconhecer o alvo** (lê o contrato amarelado e rasgado, olha à frente, ergue o cartaz ao lado do rosto
+    comparando, inclina a cabeça e confirma com um aceno curto), **Encarar o horizonte** (mão protegendo os olhos,
+    olha de um lado ao outro, baixa o braço devagar), **Afiar a lâmina** (pedra na faca com calma, testa o fio com
+    o polegar, guarda na bainha da cintura), **Limpar a poeira** (bate no ombro e no peito, nuvens de poeira, ajeita
+    o casaco sem perder a pose), **Jogar moeda** (loop até se mover: moeda dourada brilhante gira no ar e a cabeça
+    acompanha), **Finalizando contrato** (puxa o contrato, risca com carvão, mostra o contrato riscado e guarda).
+  - Também ficam: expressões (Raiva, Super serio, WTF, Tranquilidade), Alongamento, Estalar o pescoco e as
+    configurações de orelha, cauda e capacete. Sem nada tecnológico (hologramas e bracelete removidos do modelo).
+  - Gerar: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/CACADORES/skin_CACADORES_64x64_original.png modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel --fur verde --brow verde --acessorios cacadores --hide fur_chest --pelo body.north:0-4,body.south:0-1,body.up --emotes "Raiva,Super serio,WTF,Tranquilidade,Alongamento,Estalar o pescoco,Esconder orelhas,Esconder cauda,Ignorar capacete" --remove-props holo,bracelete`
+    e depois `python3 tools/cacadores_emotes.py modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel`
+    (`tools/animlib.py` = ferramentas de animação compartilhadas com o gerador principal).
+
+**Aviso sobre o Blockbench:** as transições de entrada e saída do CPM têm o **mesmo nome** (ex.: `p:walking` e
+`g:Raiva`, uma "setup" e outra "finish"). Ao abrir o projeto, o Blockbench renomeia a segunda para `p:walking2` /
+`g:Raiva2`. Na exportação o CPM avisa as `p:...2` e oferece corrigir (escolha a pose correspondente); as `g:` e `c:`
+com "2" no fim perdem a transição de saída. Os arquivos gerados aqui saem com os nomes certos.
 
 ## Versão atual: v16.28 (WTF refeito)
 

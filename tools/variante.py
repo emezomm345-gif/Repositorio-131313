@@ -336,12 +336,17 @@ def main():
                         return n
                     r = node_of(n['children'], uid)
                     if r: return r
-        for parent, gname, pivot, els in ACESSORIOS[acess]():
+        for parent, gname, pivot, els, *gextra in ACESSORIOS[acess]():
             g = copy.deepcopy(G['head'])
-            g.update(name=gname, uuid=str(uuid.uuid4()), origin=list(pivot), rotation=[0, 0, 0])
+            g.update(name=gname, uuid=str(uuid.uuid4()), origin=list(pivot),
+                     rotation=list((gextra[0] if gextra else {}).get('rotation', [0, 0, 0])))
             d['groups'].append(g)
+            G[gname] = g
             kids = []
             for name, f, t, faces, *extra in els:
+                extra = dict(extra[0]) if extra else {}
+                dens = extra.pop('density', 2)
+                glow = extra.pop('glow', False)
                 size = {'north': (t[0] - f[0], t[1] - f[1]), 'south': (t[0] - f[0], t[1] - f[1]),
                         'east': (t[2] - f[2], t[1] - f[1]), 'west': (t[2] - f[2], t[1] - f[1]),
                         'up': (t[0] - f[0], t[2] - f[2]), 'down': (t[0] - f[0], t[2] - f[2])}
@@ -351,14 +356,14 @@ def main():
                         fc_all[k] = {'uv': [0, 0, 0, 0], 'texture': None}
                         continue
                     img = faces[k]
-                    assert img.shape[1::-1] == (round(size[k][0] * 2), round(size[k][1] * 2)), (name, k, img.shape)
+                    assert img.shape[1::-1] == (round(size[k][0] * dens), round(size[k][1] * dens)), (name, k, img.shape)
                     fc_all[k] = {'uv': alloc(img.shape[1], img.shape[0]), 'texture': 0}
                     write(fc_all[k], img)
                 e = {'name': name, 'box_uv': False, 'render_order': 'default', 'locked': False, 'export': True,
-                     'scope': 0, 'allow_mirror_modeling': True, 'cpm_glow': False, 'cpm_recolor': -1,
+                     'scope': 0, 'allow_mirror_modeling': True, 'cpm_glow': glow, 'cpm_recolor': -1,
                      'cpm_extrude': False, 'cpm_data': '', 'from': list(f), 'to': list(t), 'autouv': 0, 'color': 3,
                      'rotation': [0, 0, 0], 'origin': [(f[i] + t[i]) / 2 for i in range(3)], 'faces': fc_all,
-                     **(extra[0] if extra else {}),
+                     **extra,
                      'type': 'cube', 'uuid': str(uuid.uuid4())}
                 d['elements'].append(e)
                 kids.append(e['uuid'])
