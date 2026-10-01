@@ -86,6 +86,12 @@ aplica qualquer um na hora.
     o tronco começa, braços, cabeça, orelhas, cauda e pelos chegam depois (atraso de fase); recuo da explosão
     amortecido; loops contínuos (todas as ondas fecham no fim do ciclo); a escala só é usada onde é efeito (a luz e
     o crucifixo aparecendo).
+  - **Pálpebras corrigidas** (vale para todas as expressões e emotes): com o olho fechado, às vezes aparecia um risco
+    preto (a íris) entre a faixa da sobrancelha e a pálpebra, ou acima da faixa, quando a sobrancelha subia ou
+    inclinava (Raiva, WTF, Expressão, Rezar, Meditação, Subestimar), e uma fresta escura entre a pálpebra e o rosto
+    vista de lado. A pálpebra de cima agora sobe 2 texels (até cobrir toda a íris, atrás da faixa) e as duas
+    pálpebras ficam mais fundas, encostando no rosto quando aparecem. Paradas continuam escondidas dentro da cabeça;
+    só esses 4 elementos mudaram.
   - Gerar: `python3 tools/templario_emotes.py modelo/variantes/BRANCA/skin_v16.32_BRANCA.bbmodel modelo/variantes/BRANCA/skin_v16.33_BRANCA.bbmodel`
 - **Templário v16.32** — `modelo/variantes/BRANCA/skin_v16.32_BRANCA.bbmodel` (+ `Emezomm-CPM_v16.32_BRANCA_256.png`):
   é o seu arquivo com os ajustes e melhorias de textura (`ajuste_usuario_v16.32_BRANCA.bbmodel`) + a **cruz dourada

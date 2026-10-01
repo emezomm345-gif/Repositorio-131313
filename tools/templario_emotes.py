@@ -164,6 +164,36 @@ add_group('prop_crucifixo', 'luz_explosao', (CX, CY, CZ), burst_els)
 buf = io.BytesIO(); Image.fromarray(T).save(buf, 'PNG')
 d['textures'][0]['source'] = 'data:image/png;base64,' + base64.b64encode(buf.getvalue()).decode()
 
+# ------------------------------------------------------------------ eyelid fix
+# The closed upper lid only reached y 27.95, but the iris goes up to 28.26: whenever the brow band moved up or
+# tilted (expressions, praying), a strip of black iris showed between the band and the closed lid. The upper lid
+# now grows 2 texels upward (same pixel size, skin colour) to 28.425, so the closed eye is always fully covered;
+# that extra strip sits behind the band and, at rest, inside the head like the rest of the lid.
+LID_UP = 0.475
+for s_ in 'RL':
+    e = next(x for x in d['elements'] if x['name'] == 'palpebra_sup_' + s_)
+    f = e['faces']['north']
+    u0, v0, u1, v1 = [int(round(x)) for x in f['uv']]
+    old = T[min(v0, v1):max(v0, v1), min(u0, u1):max(u0, u1)].copy()
+    if v0 > v1:
+        old = old[::-1]
+    if u0 > u1:
+        old = old[:, ::-1]
+    img = np.concatenate([np.repeat(old[:1], 2, axis=0), old], axis=0)            # 2 rows of the skin colour on top
+    r = alloc(img.shape[1], img.shape[0])
+    T[r[1]:r[3], r[0]:r[2]] = img
+    f['uv'] = r
+    e['to'][1] += LID_UP
+# Both lids also get deeper (back face from z -3.87 to -3.795): when shown they reach the face (-4.005), so from the
+# side or from below there is no slit between the lid and the face where the dark eye showed through.
+for s_ in 'RL':
+    for part in ('sup', 'inf'):
+        e = next(x for x in d['elements'] if x['name'] == 'palpebra_%s_%s' % (part, s_))
+        e['to'][2] = -3.795
+
+buf = io.BytesIO(); Image.fromarray(T).save(buf, 'PNG')
+d['textures'][0]['source'] = 'data:image/png;base64,' + base64.b64encode(buf.getvalue()).decode()
+
 # ------------------------------------------------------------------ animation tools
 n_groups = len(d['groups'])
 exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'animlib.py')).read())
