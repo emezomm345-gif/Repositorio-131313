@@ -1,5 +1,17 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.36 — andar: postura fixa visível + teste
+
+Arquivo atual: `modelo/variantes/LAST/skin_v16.36_LAST.bbmodel`.
+
+O andar agora tem uma postura fixa bem visível: inclinação de −6°, braços abertos 10° e cabeça erguida. Ela aparece
+desde o primeiro quadro e não depende do tempo da animação. Por cima continua a camada de movimento (sobe e desce,
+rolagem, giro de ombros).
+
+Serve também de teste no jogo:
+- Se ao andar ele não inclinar nem abrir os braços, o CPM não está ativando a pose "andando" nessa instalação.
+- Se inclinar mas não balançar, a pose está sendo reiniciada o tempo todo.
+
 ## L.A.S.T v16.35 — andar: correção para aparecer no jogo
 
 Arquivo atual: `modelo/variantes/LAST/skin_v16.35_LAST.bbmodel`.

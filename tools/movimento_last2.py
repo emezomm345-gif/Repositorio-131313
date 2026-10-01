@@ -232,6 +232,7 @@ def lively_walk():
         EXISTING.remove(st)
     S = 0.55                                        # Minecraft walking stride (same tempo as the vanilla swing)
     L = S * 48
+    # a clear static posture (lean, arms open) that shows from the first frame, whatever CPM does with the timing
     a = Anim('Andando - corpo solto', 'walking', L)
     amp = lambda t: smooth(t / 0.15) * smooth((L - t) / 0.15)
     w = lambda per, ph=0.0: (lambda t: math.sin(2 * math.pi * (t / per + ph)))
@@ -243,7 +244,7 @@ def lively_walk():
         k = round(t, 4)
         if k not in memo:
             m = amp(t)
-            memo[k] = upper_at(-4 * smooth(t / 0.15) - 1.8 * bob(t), 8.0 * m * twist(t), 3.5 * m * roll(t),
+            memo[k] = upper_at(-6 - 1.8 * bob(t), 8.0 * m * twist(t), 3.5 * m * roll(t),
                                drop=(0, -0.8 * bob(t), 0))
         return memo[k]
     for b in ('body', 'right_arm', 'left_arm', 'head'):
@@ -251,11 +252,11 @@ def lively_walk():
     a.rot('body', lambda t: tuple(at(t)['body'][0]))
     # arms: hang off the body, swing out / in and twist with the shoulders (follow-through: a little later)
     a.rot('right_arm', lambda t: add3(at(t)['right_arm'][0], (3 * amp(t), -5 * amp(t) * twist(t - 0.06),
-                                                            amp(t) * (5 + 6 * w(S, 0.1)(t)))))
+                                                            10 + amp(t) * 6 * w(S, 0.1)(t))))
     a.rot('left_arm', lambda t: add3(at(t)['left_arm'][0], (3 * amp(t), -5 * amp(t) * twist(t - 0.06),
-                                                           -amp(t) * (5 - 6 * w(S, 0.1)(t)))))
+                                                           -10 + amp(t) * 6 * w(S, 0.1)(t))))
     # head: keeps the look steady, cancels most of the twist / roll a little later, nods with the steps
-    a.rot('head', lambda t: (amp(t) * (2.5 + 1.6 * bob(t - 0.05)), -5.5 * amp(t) * twist(t - 0.05),
+    a.rot('head', lambda t: (4.5 + amp(t) * 1.6 * bob(t - 0.05), -5.5 * amp(t) * twist(t - 0.05),
                              -2.5 * amp(t) * roll(t - 0.05)))
     # legs: hips roll with the weight, legs open a little at each passing
     a.rot('right_leg', lambda t: (0.0, 0.0, amp(t) * (1.5 + 2.5 * w(S, 0.25)(t))))
