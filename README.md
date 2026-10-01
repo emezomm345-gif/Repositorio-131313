@@ -1,5 +1,24 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.34 — andar mais solto
+
+Arquivo atual: `modelo/variantes/LAST/skin_v16.34_LAST.bbmodel`, gerado por `tools/movimento_last2.py`. É igual à
+v16.33, só muda o andar.
+
+Braços e pernas continuam no balanço do Minecraft, que é o único que não recomeça no jogo. Por cima entra uma camada
+"corpo solto", no ritmo do passo do Minecraft (0,55 s):
+- o corpo sobe e desce a cada pisada;
+- o peso rola para o lado da perna de apoio;
+- os ombros giram;
+- os braços se abrem e fecham de lado, com atraso;
+- a cabeça estabiliza o olhar um instante depois;
+- o quadril abre as pernas na passagem.
+
+Essa camada começa do zero e entra em 0,3 s. Se o CPM entrar de novo na pose de andar, ela só aparece de novo,
+sem tranco.
+
+Prévia: `previews/variante_LAST_andar.gif`. Os braços e pernas da prévia são simulados.
+
 ## L.A.S.T v16.33 — versão atual (estável no jogo)
 
 Arquivo: `modelo/variantes/LAST/skin_v16.33_LAST.bbmodel`, gerado por `tools/movimento_last2.py` sobre a v16.30.

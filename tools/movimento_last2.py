@@ -218,7 +218,50 @@ def posture(cpm_type, name, lean=0.0, arms=(0.0, 0.0), arm_y=0.0, head=0.0, legs
 
 # walking: CPM detects walking from the position change between frames and re-enters the pose all the time, so a
 # cycle of our own would keep restarting: walking keeps the vanilla swing (synced, never restarts) + posture
-posture('walking', 'Andando - postura', lean=-3, arms=(2.0, 4.0), head=0.5)
+def lively_walk():
+    """Walking stays on the vanilla swing (it is the only thing that never restarts), and on top of it an additive,
+    restart-safe layer gives it life: the body bobs twice per stride, rolls onto the stance side and twists the
+    shoulders, the arms swing out and back sideways, the head stabilises a moment later. Everything fades in over
+    0.3 s from zero, so if CPM re-enters the walking pose the layer just blends in again instead of snapping; the
+    loop is long (48 strides) and fades through zero at its seam."""
+    main = main_of('walking')
+    strip(main, BODY)
+    for st in staged_of('walking').values():
+        strip(st, BODY)
+    S = 0.55                                        # Minecraft walking stride (same tempo as the vanilla swing)
+    L = S * 48
+    a = Anim('Andando - corpo solto', 'walking', L)
+    amp = lambda t: smooth(t / 0.3) * smooth((L - t) / 0.3)
+    w = lambda per, ph=0.0: (lambda t: math.sin(2 * math.pi * (t / per + ph)))
+    bob = lambda t: amp(t) * 0.5 * (1 - math.cos(4 * math.pi * t / S))          # 0..1, twice per stride
+    roll, twist = w(S, 0.0), w(S, 0.25)
+    memo = {}
+
+    def at(t):
+        k = round(t, 4)
+        if k not in memo:
+            m = amp(t)
+            memo[k] = upper_at(-3 * smooth(t / 0.3) - 1.2 * bob(t), 5.0 * m * twist(t), 2.4 * m * roll(t),
+                               drop=(0, -0.45 * bob(t), 0))
+        return memo[k]
+    for b in ('body', 'right_arm', 'left_arm', 'head'):
+        a.pos(b, (lambda b: lambda t: tuple(at(t)[b][1]))(b))
+    a.rot('body', lambda t: tuple(at(t)['body'][0]))
+    # arms: hang off the body, swing out / in and twist with the shoulders (follow-through: a little later)
+    a.rot('right_arm', lambda t: add3(at(t)['right_arm'][0], (2 * amp(t), -3 * amp(t) * twist(t - 0.06),
+                                                            amp(t) * (4 + 3.5 * w(S, 0.1)(t)))))
+    a.rot('left_arm', lambda t: add3(at(t)['left_arm'][0], (2 * amp(t), -3 * amp(t) * twist(t - 0.06),
+                                                           -amp(t) * (4 - 3.5 * w(S, 0.1)(t)))))
+    # head: keeps the look steady, cancels most of the twist / roll a little later, nods with the steps
+    a.rot('head', lambda t: (amp(t) * (2.5 + 1.6 * bob(t - 0.05)), -3.5 * amp(t) * twist(t - 0.05),
+                             -1.7 * amp(t) * roll(t - 0.05)))
+    # legs: hips roll with the weight, legs open a little at each passing
+    a.rot('right_leg', lambda t: (0.0, 0.0, amp(t) * (1.5 + 1.5 * w(S, 0.25)(t))))
+    a.rot('left_leg', lambda t: (0.0, 0.0, -amp(t) * (1.5 - 1.5 * w(S, 0.25)(t))))
+    emit(a)
+
+
+lively_walk()
 # running: sprint stride is 0.47 s (Minecraft caps the limb speed), bigger and bouncier, leaning forward
 w, cp = gait('Correndo', 'running', 0.47, legs_amp=52, arm_amp=40, twist=9, bob=0.6, roll=2.2, lean=-12,
              arm_fwd=12, arm_out=5, head_fix=10, lift=2.0, tail_x=20)
