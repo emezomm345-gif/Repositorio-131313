@@ -318,7 +318,7 @@ for x in EXISTING:
                         dp['z'] = round(float(dp['z']) * 0.5, 3)
 # running: sprint stride is 0.47 s (Minecraft caps the limb speed), bigger and bouncier, leaning forward
 w, cp = gait('Correndo', 'running', 0.47, legs_amp=64, arm_amp=56, twist=13, bob=0.9, roll=3.0, lean=-18,
-             arm_fwd=16, arm_out=6, head_fix=15, lift=2.5, tail_x=24)
+             arm_fwd=16, arm_out=6, head_fix=15, lift=2.5, tail_x=32)
 install('running', w, cp, antic=0.0, over=0.0)
 # sneak walk: same reason as walking (moving detection) -> posture: paws low and forward, shoulders down
 posture('sneak_walk', 'Agachado andando - postura', arms=(12.0, 4.0), arm_y=-1.0, head=8.0)
@@ -416,6 +416,36 @@ for typ, (tilt, lift, sup, inf) in PAIN.items():
         L_.scl('palp_sup_' + s_, c((1.0, sup, 1.0))).pos('palp_sup_' + s_, c((0.0, 0.0, -LID_FWD)))
         L_.scl('palp_inf_' + s_, c((1.0, max(0.04, inf), 1.0))).pos('palp_inf_' + s_, c((0.0, 0.0, -LID_FWD)))
     emit(L_)
+
+# ------------------------------------------------------------------ requested removals / tweaks
+# running tail: no upward curl along the tail (it rose too much with the forward lean); straight back, floating,
+# keeping its wave
+run_main = main_of('running')
+for b, target in (('cauda_1', -2.0), ('cauda_2', -2.0), ('cauda_3', 0.0), ('cauda_ponta', 2.0)):
+    an = run_main['animators'].get(UID[b])
+    ks = [k for k in an['keyframes'] if k['channel'] == 'rotation'] if an else []
+    if ks:
+        mean = sum(float(k['data_points'][0]['x']) for k in ks) / len(ks)
+        for k in ks:
+            k['data_points'][0]['x'] = round(float(k['data_points'][0]['x']) - mean + target, 3)
+
+# jumping: Minecraft's own body motion (tail, fur, ears stay)
+strip(main_of('jumping'), BODY)
+for st in staged_of('jumping').values():
+    strip(st, BODY)
+NEW[:] = [x for x in NEW if x['name'] != 'Pulando - pernas']
+
+# eating / drinking: back to Minecraft's own
+for x in [x for x in EXISTING if x['cpm_type'] in ('eating_left', 'eating_right')
+          or x['name'] in ('p:eating_left', 'p:eating_right', 'p:eating_left2', 'p:eating_right2')]:
+    EXISTING.remove(x)
+NEW[:] = [x for x in NEW if x['cpm_type'] not in ('eating_left', 'eating_right')]
+
+# emotes removed: lying on the ground, sitting on the block
+for nm in ('Deitar e olhar o ceu', 'Sentado no bloco'):
+    for x in [x for x in EXISTING if x['name'] in (nm, 'c:' + nm, 'c:' + nm + '2')]:
+        EXISTING.remove(x)
+    NEW[:] = [x for x in NEW if x['name'] != nm + '#repouso']
 
 # ------------------------------------------------------------------ short entries
 # In CPM the main animations of a pose only start after its entry transition (p:<pose> setup); meanwhile the vanilla

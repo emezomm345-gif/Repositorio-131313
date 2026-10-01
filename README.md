@@ -1,5 +1,16 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.44 — pulo e comer padrão, dois emotes removidos, cauda da corrida
+
+Arquivo atual: `modelo/variantes/LAST/skin_v16.44_LAST.bbmodel`.
+
+- **Pular:** sem animação do corpo; braços, pernas, corpo e cabeça são os do Minecraft. Cauda, tufos e orelhas
+  continuam.
+- **Comer, beber e tomar poção:** removidos, voltam ao padrão do Minecraft.
+- **Emotes removidos:** "Deitar e olhar o céu" e "Sentado no bloco".
+- **Cauda ao correr:** mais baixa. A curva para cima ao longo da cauda saiu e a base desceu 8°. Ela fica reta para
+  trás, flutuando, e continua ondulando.
+
 ## L.A.S.T v16.43 — transições mais suaves
 
 Arquivo atual: `modelo/variantes/LAST/skin_v16.43_LAST.bbmodel`.
