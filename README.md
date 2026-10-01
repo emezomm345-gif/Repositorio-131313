@@ -63,6 +63,11 @@ aplica qualquer um na hora.
     e depois `python3 tools/cacadores_emotes.py modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel`
     (`tools/animlib.py` = ferramentas de animação compartilhadas com o gerador principal).
 
+- **Templário — versão atual: `modelo/variantes/BRANCA/skin_v16.32_BRANCA.bbmodel`** (+ `Emezomm-CPM_v16.32_BRANCA_256.png`):
+  é o seu arquivo com os ajustes e melhorias de textura (`ajuste_usuario_v16.32_BRANCA.bbmodel`) + a **cruz dourada
+  nas costas**, copiada da cruz da frente (mesmo dourado e sombreado, simétrica, no painel branco das costas). Só a
+  textura das costas mudou (88 pixels). A partir daqui o arquivo de referência do Templário é este, com as suas
+  edições à mão; o comando abaixo gera a base antiga (sem elas).
 - **Templário (variante branca)** — `modelo/variantes/BRANCA/skin_v16.28_BRANCA.bbmodel`
   (+ `Emezomm-CPM_v16.28_BRANCA_256.png`), da skin `skin_BRANCA_64x64_original.png`. Pelo escuro vira
   **branco/cinza-claro** (o branco original continua), rosto igual, **sobrancelha** no branco do pelo só que mais
