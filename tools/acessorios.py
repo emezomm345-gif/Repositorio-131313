@@ -105,9 +105,66 @@ def bandana(w, h, seed=0, light_top=True):
     return a
 
 
+# neck bandana (reference: band around the neck under the chin, triangle on the chest with a light trim and
+# diamond motifs). Everything is 3D: the band is a ring around the neck, the triangle is two stepped layers
+# (light-green trim behind, darker printed cloth in front, inset -> raised border) and a raised diamond.
+BD = {'D': (0, 72, 20), 'd': (0, 92, 28), 'm': (0, 112, 36), 'T': (60, 160, 80), 't': (40, 132, 60),
+      'L': (130, 215, 140), 'S': (0, 52, 16)}
+
+
+def cloth(w, h, seed=0, diamonds=True):
+    """dark printed cloth: two greens in diagonal weave, small light diamonds every 4 px"""
+    a = np.zeros((h, w, 4), np.uint8)
+    for y in range(h):
+        for x in range(w):
+            a[y, x] = (*(BD['d'] if (x + y + seed) % 3 else BD['D']), 255)
+    if diamonds:
+        for x in range(1 + seed % 2, w - 1, 4):
+            for y in range(0, h):
+                if (x // 4 + y + seed) % 2 == 0:
+                    a[y, x] = (*BD['L'], 255)
+    return a
+
+
+def band(w, h, seed=0):
+    """the band around the neck: light trim on top and bottom, printed dark cloth between"""
+    a = cloth(w, h, seed)
+    a[0] = (*BD['T'], 255)
+    a[-1] = (*BD['t'], 255)
+    return a
+
+
+def bandana_pescoco():
+    els = [('bandana_faixa', (-4.25, 22.75, -2.25), (4.25, 24.25, 2.25),
+            {'north': band(17, 3, 0), 'south': band(17, 3, 1), 'east': band(9, 3, 2), 'west': band(9, 3, 3),
+             'up': rows(17, [BD['m']] * 9), 'down': rows(17, [BD['S']] * 9)})]
+    # back layer: trim (light green), steps of 1 unit, z -2.75..-2.25
+    back = [(22.0, 23.0, 3.5), (21.0, 22.0, 2.75), (20.0, 21.0, 2.0), (19.0, 20.0, 1.25), (18.0, 19.0, 0.5)]
+    for i, (y0, y1, hw) in enumerate(back):
+        w = int(round(hw * 4))
+        els.append(('bandana_borda_%d' % (i + 1), (-hw, y0, -2.75), (hw, y1, -2.25),
+                    {'north': rows(w, [BD['T'], BD['t']]), 'east': rows(1, [BD['T'], BD['t']]),
+                     'west': rows(1, [BD['T'], BD['t']]), 'down': rows(w, [BD['t']])}))
+    # front layer: printed cloth, inset 0.75 -> the trim shows around it as a raised border, z -3.25..-2.75
+    front = [(21.75, 22.75, 2.75), (20.75, 21.75, 2.0), (19.75, 20.75, 1.25), (18.75, 19.75, 0.5)]
+    for i, (y0, y1, hw) in enumerate(front):
+        w = int(round(hw * 4))
+        face = cloth(w, 2, i)
+        face[0, :] = np.where((np.arange(w) % 2 == 0)[:, None], (*BD['m'], 255), face[0, :])   # fold highlight
+        els.append(('bandana_pano_%d' % (i + 1), (-hw, y0, -3.25), (hw, y1, -2.75),
+                    {'north': face, 'east': rows(1, [BD['d'], BD['D']]), 'west': rows(1, [BD['d'], BD['D']]),
+                     'up': rows(w, [BD['m']]), 'down': rows(w, [BD['S']])}))
+    # raised diamond in the middle of the triangle
+    els.append(('bandana_losango', (-0.5, 20.5, -3.75), (0.5, 21.5, -3.25),
+                {'north': grid(["LT", "TL"], BD), 'east': rows(1, [BD['T'], BD['t']]),
+                 'west': rows(1, [BD['T'], BD['t']]), 'up': rows(2, [BD['L']]), 'down': rows(2, [BD['t']])},
+                {'rotation': [0, 0, 45], 'origin': [0, 21.0, -3.5]}))
+    return els
+
+
 def cacadores():
-    """Goggles only (cap and bandana removed on request): two bronze-framed orange lenses on the forehead,
-    a bridge and the grey strap around the head that holds them."""
+    """Goggles on the forehead (bronze frame, orange lenses, bridge, grey strap) + a green bandana tied around
+    the neck, fully 3D with relief (see bandana_pescoco)."""
     lens_front = grid(["33332",
                        "3HOO2",
                        "2OOD1",
@@ -127,6 +184,7 @@ def cacadores():
             ('oculos_ponte', (-1.25, 30.55, -4.75), (1.25, 31.05, -4.25),
              {'north': rows(5, [BRONZE['2']]), 'up': rows(5, [BRONZE['3']]), 'down': rows(5, [BRONZE['1']])}),
         ]),
+        ('body', 'acess_bandana', (0, 23.5, 0), bandana_pescoco()),
     ]
 
 

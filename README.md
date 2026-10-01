@@ -34,10 +34,13 @@ aplica qualquer um na hora.
 
 - **Caçadores de recompensas** (variante verde) — `modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel`
   (+ `Emezomm-CPM_v16.28_CACADORES_256.png`), da skin `skin_CACADORES_64x64_original.png`. Pelo escuro verde (o
-  branco continua branco: focinho, peito, dentro das orelhas, ponta da cauda). Na cabeça **só os óculos** em 3D
-  (armação de bronze, lentes laranja, ponte e a alça cinza com fivela em volta da cabeça) — sem gorro e sem
-  bandana. Colete de couro com o **peito do próprio Emezomm** no decote (onde a skin pintava a bandana verde:
-  `--pelo`), mangas cinza, luvas pretas, cinto verde com fivela, calça marrom e botas, com a segunda camada.
+  branco continua branco: focinho, peito, dentro das orelhas, ponta da cauda). Na cabeça só os **óculos** em 3D
+  (armação de bronze, lentes laranja, ponte e a alça cinza com fivela). **Bandana no pescoço**, toda em 3D com
+  relevo (como a referência): faixa em volta do pescoço logo abaixo do queixo, com bordas claras e losangos, e o
+  triângulo no peito em degraus — camada de trás verde-clara (borda saltada) e camada da frente estampada,
+  recuada — com um losango em relevo no centro. Presa ao corpo. Colete de couro com o peito do próprio Emezomm
+  no decote (`--pelo`), mangas cinza, luvas pretas, cinto verde com fivela, calça marrom e botas, com a segunda
+  camada.
   Tufos do peito escondidos pelo colete. Prévia: `previews/variante_CACADORES.png`.
   Comando: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/CACADORES/skin_CACADORES_64x64_original.png modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel --fur verde --acessorios cacadores --hide fur_chest --pelo body.north:0-4,body.south:0-1,body.up`
 
