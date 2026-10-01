@@ -4,8 +4,8 @@ usage: python3 tools/templario_emotes.py <skin_v16.32_BRANCA.bbmodel> <out.bbmod
 
 - Props (new groups/elements, hidden inside the right arm while unused, textured in free atlas space):
   a big golden crucifix (with a small ruby) and, inside it, a burst of light (glowing rays + glow disc).
-- Rezar (loop until moving): eyes closed, head bowed, hands joined holding the crucifix, praying.
-- Meditacao extrema (loop until moving): floats in the air cross-legged, eyes closed, fur and tail drifting.
+- Rezar (loop until moving): eyes closed, brows drawn (serious), head bowed, hands joined holding the crucifix.
+- Meditacao extrema (loop until moving): levitates standing up, eyes closed, serious face, fur and tail drifting.
 - Subestimar (expression layer, face only): "e isso?" -- half-lidded, one brow up, looking down at you.
 - Explosao de luz (gesture): raises the crucifix with both hands above the head and it bursts into light.
 Closed eyes use a separate non-additive lid animation named "<emote>#olhos": CPM ignores what follows '#',
@@ -227,67 +227,125 @@ def env(points):
     return curve(points)
 
 
+# ------------------------------------------------------------------ entering / leaving with weight
+# Every bone eases in with a small anticipation (goes a bit the other way first), passes the pose a little
+# (overshoot) and settles; bones far from the start of the motion start later (phase delay: torso -> arms ->
+# head -> ears / tail / fur). Leaving: eases back, passes rest a little and settles.
+def delay_of(bone):
+    if bone in ('body', 'right_leg', 'left_leg'):
+        return 0.0
+    if bone in ('right_arm', 'left_arm', 'prop_crucifixo', 'luz_explosao'):
+        return 0.08
+    if bone == 'head':
+        return 0.16
+    if bone.startswith(('palp', 'iris', 'nariz')):
+        return 0.12
+    if bone.startswith('orelha'):
+        return 0.26
+    if bone in TAIL:
+        return 0.2 + 0.05 * TAIL.index(bone)
+    return 0.3                                   # fur tufts
+
+
+def staged_weighted(an, prefix, dur, antic=0.1, over=0.07, delays=delay_of):
+    w_in = curve([(0, 0), (0.2, -antic), (0.68, 1 + over), (0.86, 1 - 0.3 * over), (1, 1)])
+    w_out = curve([(0, 1), (0.14, 1 + 0.5 * antic), (0.66, -over), (0.86, 0.3 * over), (1, 0)])
+    out = []
+    for kind, w in (('setup', w_in), ('finish', w_out)):
+        st = Anim(prefix + an.name, kind, dur, loop='once')
+        for bone, chans in an.tracks.items():
+            d0 = delays(bone) * dur
+            u = (lambda d0: lambda t: max(0.0, min(1.0, (t - d0) / (dur - d0))))(d0)
+            for ch in chans:
+                v0 = an.value(bone, ch, 0.0)
+                if ch == 'scale':                # scale never overshoots (it would flip)
+                    s = (lambda u, k: lambda t: smooth(u(t)) if k == 'setup' else 1 - smooth(u(t)))(u, kind)
+                    st.add(bone, ch, (lambda v0, s: lambda t: tuple(1 + (x - 1) * s(t) for x in v0))(v0, s))
+                else:
+                    st.add(bone, ch, (lambda v0, u, w: lambda t: tuple(x * w(u(t)) for x in v0))(v0, u, w))
+        out.append(st)
+    return out
+
+
+SERIOUS = dict(lift=-0.06, tilt=8)               # brows drawn together: serious, concentrated
+
+
 # ------------------------------------------------------------------ Rezar (loop until the player moves)
-a = Anim('Rezar', 'custom_pose', 4.0)
+L_PRAY = 4.0
+a = Anim('Rezar', 'custom_pose', L_PRAY)
 r_p, l_p, mid_p = hands_together(16.0)
 cr_r, cr_p = place(r_p, CROSS_UP @ rotmat((-8, 0, 0)), mid_p + np.array([0, 0.3, -0.7]))   # top leaning to the face
-for b, v in (('right_arm', r_p), ('left_arm', l_p)):
-    a.rot(b, c(v))
+breath = wave(L_PRAY, -0.25)                                       # chest leads ...
+breath_h = wave(L_PRAY, -0.25 - 0.06)                              # ... the head follows a little later
+breath_a = wave(L_PRAY, -0.25 - 0.1)
+a.rot('right_arm', lambda t: add3(r_p, (0.8 * breath_a(t), 0.0, 0.0)))
+a.rot('left_arm', lambda t: add3(l_p, (0.7 * breath_a(t), 0.0, 0.0)))
 a.rot('prop_crucifixo', c(cr_r)).pos('prop_crucifixo', c(cr_p))
 a.scl('luz_explosao', c((0.02, 0.02, 0.02)))
-breath = wave(4.0, -0.25)
-a.rot('head', lambda t: (-22 + 1.5 * breath(t), 0.0, 0.0))        # bowed, breathing
 a.rot('body', lambda t: (-3 + 0.6 * breath(t), 0.0, 0.0))
+a.rot('head', lambda t: (-22 + 1.2 * breath_h(t), 0.0, 0.0))     # bowed over the crucifix
 closed_eyes(a)
-brows(a, lift=-0.03, tilt=-6)                                       # serene
-ears(a, back=14, out=10)
+brows(a, **SERIOUS)
+ears(a, back=16, out=8, side='R')
+ears(a, back=13, out=10, side='L')                                 # a little asymmetry
 tail_pose(a, rx=(10, 3, 1, 0, 0))
-a.rot('cauda_ponta', lambda t: (0.0, 4 * math.sin(2 * math.pi * t / 4.0), 0.0))
-staged_custom(a, 0.6)
-appear(ANIMS[-2], ANIMS[-1], 0.6)
+a.rot('cauda_ponta', lambda t: (0.0, 3 * math.sin(2 * math.pi * t / L_PRAY - 0.6), 0.0))
+st_in, st_out = staged_weighted(a, 'c:', 0.9)
+appear(st_in, st_out, 0.9)
 
 # ------------------------------------------------------------------ Meditacao extrema (loop until moving)
+# Standing levitation: the body hangs in the air, legs relaxed and dangling, arms open a little at the sides.
 L_MED = 6.0
 a = Anim('Meditacao extrema', 'custom_pose', L_MED)
-LIFT = 6.0
-bob = wave(3.0, -0.25)
-legs = {'right_leg': (84, 38, 0), 'left_leg': (84, -38, 0)}            # crossed in front
-knee = {s: np.array(PIVOT[s], float) + rotmat(legs[s]) @ np.array([0, -6.5, 0]) for s in legs}
+LIFT = 5.0
 DROP = (0, LIFT, 0)
-arms = {'right_arm': reach('right_arm', knee['right_leg'] + np.array([0.6, 1.2 + LIFT, 0]), DROP),
-        'left_arm': reach('left_arm', knee['left_leg'] + np.array([-0.6, 1.2 + LIFT, 0]), DROP)}
-lot = rig(drop=DROP, limbs={**legs, **arms, 'head': (4, 0, 0)})
+arm_open = {s: reach(s, np.array(PIVOT[s], float) + np.array(DROP) + np.array([sx * 4.2, -9.3, -1.6]), DROP)
+            for s, sx in (('right_arm', 1), ('left_arm', -1))}
+lot = rig(drop=DROP, limbs={'right_arm': arm_open['right_arm'], 'left_arm': arm_open['left_arm'],
+                            'right_leg': (5, 0, 1.5), 'left_leg': (-2, 0, -1.5), 'head': (-3, 0, 0)})
+B = 3.0                                                            # float period
+lag = {'body': 0.0, 'head': 0.05, 'right_arm': 0.08, 'left_arm': 0.1, 'right_leg': 0.14, 'left_leg': 0.17}
 for b, (r, p) in lot.items():
-    a.rot(b, c(r))
-    a.pos(b, (lambda p: lambda t: (p[0], p[1] + 0.6 * bob(t), p[2]))(p))
-a.rot('body', lambda t: (0.0, 3 * math.sin(2 * math.pi * t / L_MED), 0.0))
+    f = wave(B, -0.25 - lag[b])
+    a.pos(b, (lambda p, f: lambda t: (p[0], p[1] + 0.7 * f(t), p[2]))(p, f))
+    g = wave(B, -0.25 - lag[b] - 0.12)                             # limbs answer the bob a little later
+    amp = {'right_arm': (-2.5, 0, 2.0), 'left_arm': (-2.0, 0, -2.0), 'right_leg': (3.0, 0, 0),
+           'left_leg': (2.4, 0, 0)}.get(b, (0, 0, 0))
+    a.rot(b, (lambda r, g, amp: lambda t: add3(r, mul3(amp, g(t))))(r, g, amp))
+a.rot('body', lambda t: (0.5 * wave(B, -0.25)(t), 2 * math.sin(2 * math.pi * t / L_MED), 0.0))
 closed_eyes(a)
-brows(a, lift=0.02, tilt=-4)
-ears_fn(a, fn_back=lambda t: -4 + 3 * math.sin(2 * math.pi * t / 3.0), fn_out=lambda t: 6.0)
-tail_pose(a, rx=(-28, -12, -10, -6, -4), ry=(0, 0, 0, 0, 0))
-for i, b in enumerate(TAIL):                                          # tail drifting around the body
-    a.rot(b, lambda t, i=i: (4 * math.sin(2 * math.pi * (t / 3.0 - 0.1 * i)), 10 * math.sin(2 * math.pi * (t / L_MED - 0.08 * i)), 0.0))
-fur_flutter(a, 8.0, 3.0)                                             # fur floating
-staged_custom(a, 0.8)
+brows(a, **SERIOUS)
+ears_fn(a, fn_back=lambda t: 6 + 2 * wave(B, -0.4)(t), fn_out=lambda t: 4.0)
+for i, b in enumerate(TAIL):                                       # weightless tail, wave running to the tip
+    a.rot(b, lambda t, i=i: (-12 + 2 * i + 3 * math.sin(2 * math.pi * (t / B - 0.08 * i)),
+                             (6 + 2 * i) * math.sin(2 * math.pi * (t / L_MED - 0.07 * i)), 0.0))
+fur_flutter(a, 6.0, B)
+staged_weighted(a, 'c:', 1.4, antic=0.12, over=0.08)               # small crouch, rises, passes, settles
 
 # ------------------------------------------------------------------ Subestimar (expression layer, face only)
 a = Anim('Subestimar', 'layer', 3.0)
 a.pos('palp_R', c((0.0, 0.24, 0.0))).rot('palp_R', c((0.0, 0.0, -7.0)))      # one brow up, arched
 closed_eyes(a, c(0.5), side='L')                                              # the other eye half-lidded, bored
 a.rot('palp_L', c((0.0, 0.0, 4.0)))
+look = curve([(0, 1), (1.3, 1), (1.55, -0.35), (1.65, -0.25), (2.6, -0.25), (2.85, 1.06), (2.95, 1)])
 for s_ in 'RL':                                                               # looking down at "that"
-    a.pos('iris_' + s_, lambda t: (0.1 * curve([(0, 1), (1.4, 1), (1.6, -0.3), (2.6, -0.3), (3.0, 1)])(t), -0.16, 0.0))
+    a.pos('iris_' + s_, lambda t: (0.1 * look(t), -0.16, 0.0))
 ears(a, back=8, out=20)                                                      # "meh"
-ears_fn(a, fn_twist=lambda t: 12 * twitch([2.0], 0.3)(t), side='L')
+ears_fn(a, fn_twist=lambda t: 12 * twitch([1.75], 0.3)(t), side='L')        # after the glance, not with it
 sn = twitch([1.5], 0.35)                                                     # little huff through the nose
 a.pos('nariz', lambda t: (0.0, 0.03 * sn(t), -0.02 * sn(t)))
-staged_layer(a, 0.3)
+staged_weighted(a, 'g:', 0.45, antic=0.05, over=0.1)
 
 # ------------------------------------------------------------------ Explosao de luz (gesture)
 a = Anim('Explosao de luz', 'gesture', 6.0, loop='once')
 Y_CHEST, Y_UP = 16.6, 30.5                     # hand height: at the chest / above the head (arms almost straight up)
-out_k = curve([(0, 0), (0.7, 1), (4.4, 1), (5.4, 0), (6.0, 0)])                 # out of the rest pose and back
-lift_k = curve([(0, Y_CHEST), (0.8, Y_CHEST), (1.6, Y_UP), (3.4, Y_UP), (4.4, Y_CHEST), (6.0, Y_CHEST)])
+out_k = curve([(0, 0), (0.7, 1), (4.4, 1), (5.2, -0.05), (5.5, 0.015), (5.7, 0), (6.0, 0)])
+lift_k = curve([(0, Y_CHEST), (0.8, Y_CHEST),
+                (1.05, Y_CHEST - 1.0),                                     # anticipation: the cross dips first
+                (1.65, Y_UP + 0.7), (1.85, Y_UP - 0.25), (2.0, Y_UP),     # raise, overshoot, settle
+                (2.3, Y_UP),                                              # held still: the light gathers
+                (2.45, Y_UP - 1.1), (2.7, Y_UP + 0.35), (2.95, Y_UP),     # recoil of the burst, damped
+                (3.4, Y_UP), (4.4, Y_CHEST), (6.0, Y_CHEST)])
 _memo = {}
 
 
@@ -306,15 +364,21 @@ def held_pose(t):
 
 a.rot('right_arm', lambda t: held_pose(t)[0]).rot('left_arm', lambda t: held_pose(t)[1])
 a.rot('prop_crucifixo', lambda t: held_pose(t)[2]).pos('prop_crucifixo', lambda t: held_pose(t)[3])
-REC = (0, -0.7, 0)                             # the burst pushes him down a little
+REC, DIP = (0, -0.7, 0), (0, -0.5, 0)
 keyposes(a, [
     (0.0, {}),
-    (0.8, {'head': ((-10, 0, 0), Z3)}),
-    (1.6, {'head': ((22, 0, 0), Z3), 'body': ((2, 0, 0), Z3)}),
-    (2.25, {'head': ((25, 0, 0), Z3), 'body': ((2, 0, 0), Z3)}),
-    (2.45, merge(rig(drop=REC), {'head': ((16, 0, 0), REC), 'body': ((5, 0, 0), REC)})),
-    (3.4, {'head': ((20, 0, 0), Z3), 'body': ((2, 0, 0), Z3)}),
+    (0.8, {'head': ((-10, 0, 0), Z3)}),                                   # looks at the cross in his hands
+    (1.05, merge(rig(drop=DIP), {'head': ((-12, 0, 0), DIP), 'body': ((-4, 0, 0), DIP)})),   # gathers himself
+    (1.6, {'body': ((3, 0, 0), Z3), 'head': ((12, 0, 0), Z3)}),          # body leads the raise ...
+    (1.85, {'body': ((2, 0, 0), Z3), 'head': ((27, 0, 0), Z3)}),         # ... the head follows and passes
+    (2.05, {'body': ((2, 0, 0), Z3), 'head': ((24, 0, 0), Z3)}),
+    (2.3, {'body': ((2, 0, 0), Z3), 'head': ((25, 0, 0), Z3)}),
+    (2.45, merge(rig(drop=REC), {'head': ((14, 0, 0), REC), 'body': ((6, 0, 0), REC)})),   # the burst hits
+    (2.7, {'body': ((1, 0, 0), Z3), 'head': ((22, 0, 0), Z3)}),
+    (2.95, {'body': ((2.4, 0, 0), Z3), 'head': ((19, 0, 0), Z3)}),
+    (3.4, {'body': ((2, 0, 0), Z3), 'head': ((20, 0, 0), Z3)}),
     (4.4, {'head': ((-12, 0, 0), Z3)}),
+    (5.3, {'head': ((1.5, 0, 0), Z3)}),                                   # settles back past rest a little
     (6.0, {})])
 s_burst = curve([(0, 0.02), (1.8, 0.02), (2.2, 0.7), (2.3, 1.2), (2.42, 10.0), (2.9, 13.0), (3.2, 6.0),
                  (3.35, 0.02), (6.0, 0.02)], ease=lambda x: x)
@@ -323,13 +387,19 @@ cross_s = curve([(0, 0.05), (0.45, 0.05), (0.8, 1.0), (4.4, 1.0), (4.8, 0.05), (
 a.scl('prop_crucifixo', lambda t: (cross_s(t),) * 3)
 a.rot('luz_explosao', lambda t: (40 * max(0.0, min(1.0, (t - 2.3) / 1.0)), 0.0, 0.0))   # rays turn while it blows
 blast = env([(0, 0), (2.3, 0), (2.45, 1), (3.0, 1), (3.6, 0), (6.0, 0)])
+late = lambda dt, f=blast: (lambda t: f(t - dt))                         # follow-through: later and longer
 glowing = env([(0, 0), (1.8, 0), (2.3, 1), (3.4, 1), (4.0, 0), (6.0, 0)])
 brows(a, lift=-0.12, tilt=4, fn=blast)                                   # eyes narrowed in the light
-ears_fn(a, fn_back=lambda t: 40 * blast(t) - 8 * glowing(t) * (1 - blast(t)), fn_out=lambda t: 10 * blast(t))
-fur_lift(a, FUR, lambda t, i: 20 * blast(t) * (0.7 + 0.3 * math.sin(i * 1.3)))
-tail_pose(a, rx=(-30, -10, -8, -4, -2), fn=blast)
+brows(a, **{k: v * 0.6 for k, v in SERIOUS.items()}, fn=lambda t: glowing(t) * (1 - blast(t)))
+ear_b = late(0.06)
+ears_fn(a, fn_back=lambda t: 40 * ear_b(t) - 8 * glowing(t) * (1 - ear_b(t)), fn_out=lambda t: 10 * ear_b(t))
+fur_lift(a, FUR, lambda t, i: 20 * blast(t - 0.03 * (i % 4)) * (0.7 + 0.3 * math.sin(i * 1.3)))
+for i, b in enumerate(TAIL):
+    f = late(0.05 + 0.04 * i)
+    rx = (-30, -10, -8, -4, -2)[i]
+    a.rot(b, (lambda f, rx: lambda t: (rx * f(t), 0.0, 0.0))(f, rx))
 for s in 'RL':
-    a.pos('iris_' + s, lambda t: (0.0, 0.2 * env([(0, 0), (1.6, 1), (3.4, 1), (4.4, 0), (6.0, 0)])(t), 0.0))
+    a.pos('iris_' + s, lambda t: (0.0, 0.2 * env([(0, 0), (1.7, 1), (3.4, 1), (4.4, 0), (6.0, 0)])(t), 0.0))
 
 # ------------------------------------------------------------------ save
 order = {}

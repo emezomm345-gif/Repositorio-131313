@@ -66,18 +66,26 @@ aplica qualquer um na hora.
 - **Templário — versão atual: `modelo/variantes/BRANCA/skin_v16.33_BRANCA.bbmodel`** (+ `Emezomm-CPM_v16.33_BRANCA_256.png`):
   o seu v16.32 (nada dele mudou: elementos, grupos, animações e pixels pintados ficam idênticos) + os emotes finais
   (prévia: `previews/variante_BRANCA_emotes.gif`):
-  - **Rezar** (contínuo, até você se mover): fecha os olhos, abaixa a cabeça e junta as mãos segurando um
-    **crucifixo dourado grande** (com um rubi no centro), respirando devagar, orelhas para trás, cauda calma.
-  - **Meditacao extrema** (contínuo): flutua no ar de pernas cruzadas e olhos fechados, sobe e desce devagar, o corpo
-    gira de leve, a cauda e os pelos ondulam como se estivessem sem peso.
+  - **Rezar** (contínuo, até você se mover): fecha os olhos com a **sobrancelha franzida** (rosto sério), abaixa a
+    cabeça e junta as mãos segurando um **crucifixo dourado grande** (com um rubi no centro); respira devagar (o peito
+    puxa, a cabeça e os braços acompanham um pouco depois), orelhas para trás, cauda calma.
+  - **Meditacao extrema** (contínuo): **levita em pé**, olhos fechados e sobrancelha franzida (rosto sério), braços
+    um pouco abertos ao lado do corpo e pernas soltas. Na entrada ele dá uma pequena agachada, sobe, passa um pouco do
+    ponto e assenta; no ar sobe e desce devagar (corpo primeiro, cabeça, braços e pernas respondendo depois), a cauda
+    e os pelos ondulam sem peso; na saída desce e faz um pequeno impacto ao tocar o chão.
   - **Subestimar** (expressão alternável, só no rosto, como Raiva/WTF): "e isso?" — uma sobrancelha erguida, o outro
     olho meio fechado de tédio, olhando para baixo, orelhas de lado e uma bufada pelo focinho.
-  - **Explosao de luz** (gesto de duração): o crucifixo aparece nas mãos juntas, ele o ergue com as duas mãos acima da
-    cabeça e a cruz solta uma **explosão de luz** (raios brilhantes em 3D + clarão, com brilho `glow`), que empurra o
+  - **Explosao de luz** (gesto de duração): o crucifixo aparece nas mãos juntas, ele abaixa um pouco a cruz e o corpo
+    (preparação), ergue com as duas mãos acima da cabeça (passa um pouco e assenta), segura parado enquanto a luz junta
+    e a cruz solta uma **explosão de luz** (raios brilhantes em 3D + clarão, com brilho `glow`), que empurra o
     corpo, as orelhas, os pelos e a cauda; depois a luz some e ele abaixa a cruz.
   - O crucifixo e a luz são peças novas, escondidas dentro do braço direito fora desses emotes (invisíveis em
     qualquer ângulo) e pintadas em espaço livre do atlas. Os olhos fechados usam uma animação de pálpebras própria
     chamada `<emote>#olhos`: o CPM ignora o que vem depois do `#`, então ela faz parte do mesmo botão.
+  - Animação refeita com as regras de animação avançada: entradas e saídas com preparação, overshoot e assentamento;
+    o tronco começa, braços, cabeça, orelhas, cauda e pelos chegam depois (atraso de fase); recuo da explosão
+    amortecido; loops contínuos (todas as ondas fecham no fim do ciclo); a escala só é usada onde é efeito (a luz e
+    o crucifixo aparecendo).
   - Gerar: `python3 tools/templario_emotes.py modelo/variantes/BRANCA/skin_v16.32_BRANCA.bbmodel modelo/variantes/BRANCA/skin_v16.33_BRANCA.bbmodel`
 - **Templário v16.32** — `modelo/variantes/BRANCA/skin_v16.32_BRANCA.bbmodel` (+ `Emezomm-CPM_v16.32_BRANCA_256.png`):
   é o seu arquivo com os ajustes e melhorias de textura (`ajuste_usuario_v16.32_BRANCA.bbmodel`) + a **cruz dourada
