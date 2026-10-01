@@ -342,7 +342,7 @@ def main():
     if head_rows:
         r0, r1 = head_rows
         hf = next(e for e in d['elements'] if e['name'] == 'head')['faces']
-        warm = lambda c: (int(c[:3].max()) - int(c[:3].min())) > 14 and c[3] > 0     # cloth/gold, not the grey fur
+        warm = lambda c: (int(c[:3].max()) - int(c[:3].min())) > 4 and c[3] > 0      # cloth/gold, not the grey fur
         for face, (x, y, fw, fh) in box_faces(0, 0, 8, 8, 8).items():
             base = sk[y:y + fh, x:x + fw].copy()
             over = sk[box_faces(32, 0, 8, 8, 8)[face][1]:box_faces(32, 0, 8, 8, 8)[face][1] + fh,
@@ -437,6 +437,12 @@ def main():
         if head_rows and face not in ('up', 'down'):
             a = sk[yo:yo + fh, xo:xo + fw].copy()
             a[:head_rows[0]] = 0; a[head_rows[1] + 1:] = 0
+            if face != 'north':                         # relief band continuous where the head has the gold band
+                hb = sk[y:y + fh, x:x + fw]
+                gold = (hb[..., 0].astype(int) - hb[..., 2] > 60) & (hb[..., 3] > 0)
+                gold[:head_rows[0]] = False; gold[head_rows[1] + 1:] = False
+                fill = gold & (a[..., 3] == 0)
+                a[fill] = (hb[fill].astype(int) * np.array([0.9, 0.9, 0.9, 1])).astype(np.uint8)
         if head_top:
             b = sk[y:y + fh, x:x + fw].copy()
             if face in ('north', 'south', 'east', 'west'):

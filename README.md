@@ -72,14 +72,16 @@ aplica qualquer um na hora.
   segunda camada (pedacinhos soltos da 2ª camada vão para a 1ª e as cores próximas têm transição suave:
   `--smooth`). **Capuz pintado na cabeça** como na skin (`--head-paint 5-7`): faixa
   dourada inclinada e pano creme nas laterais, na nuca e embaixo da cabeça (na frente só os cantos dourados ao lado
-  do focinho; rosto intacto), com a faixa em **relevo** na casca da cabeça (camada de chapéu da skin). Tufos do
-  peito, das bochechas e o último da nuca ficam sob a roupa/capuz. A pintura que você
+  do focinho; rosto intacto), com a faixa em **relevo** contínua na casca da cabeça (camada de chapéu da skin). Regra dos tufos: onde tem
+  roupa o tufo não aparece — escondidos os do peito, os 2 de baixo da nuca (caem sobre o capuz) e a peça de pelo
+  das bochechas que fica dentro do capuz; os **pelos ao lado do rosto** continuam. Os ajustes que você mandou
+  (`ajuste_usuario_v16.29/v16.31_BRANCA.bbmodel`) foram seguidos. A pintura que você
   fez nos ombros (`ajuste_usuario_v16.29_BRANCA.bbmodel`) é mantida (`--keep-tex`).
   **Emotes:** expressões (Raiva, Super serio, WTF, Tranquilidade), Investigar, Pouso de heroi, Estalar o pescoco e
   as configurações (orelhas, cauda, capacete). Retirados: todos os tecnológicos (com hologramas e bracelete),
   Alongamento, Deitar e olhar o ceu, Pensativo, Tristeza, Sentado no bloco e Saudacao.
   Prévia: `previews/variante_BRANCA.png`.
-  Comando: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/BRANCA/skin_BRANCA_64x64_original.png modelo/variantes/BRANCA/skin_v16.28_BRANCA.bbmodel --fur branco --brow branco --hide fur_chest,fur_cheek_R,fur_cheek_L,bochechas,fur_back_4 --slim --ear-blend --smooth --head-paint 5-7 --keep-tex "modelo/variantes/BRANCA/ajuste_usuario_v16.29_BRANCA.bbmodel:left_arm.west,left_arm.up,right_arm.east,right_arm.up" --emotes "Raiva,Super serio,WTF,Tranquilidade,Investigar,Pouso de heroi,Estalar o pescoco,Esconder orelhas,Esconder cauda,Ignorar capacete" --remove-props holo,bracelete`
+  Comando: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/BRANCA/skin_BRANCA_64x64_original.png modelo/variantes/BRANCA/skin_v16.28_BRANCA.bbmodel --fur branco --brow branco --hide fur_chest,bochechas,fur_back_3,fur_back_4 --slim --ear-blend --smooth --head-paint 5-7 --keep-tex "modelo/variantes/BRANCA/ajuste_usuario_v16.29_BRANCA.bbmodel:left_arm.west,left_arm.up,right_arm.east,right_arm.up" --emotes "Raiva,Super serio,WTF,Tranquilidade,Investigar,Pouso de heroi,Estalar o pescoco,Esconder orelhas,Esconder cauda,Ignorar capacete" --remove-props holo,bracelete`
 
 **Aviso sobre o Blockbench:** as transições de entrada e saída do CPM têm o **mesmo nome** (ex.: `p:walking` e
 `g:Raiva`, uma "setup" e outra "finish"). Ao abrir o projeto, o Blockbench renomeia a segunda para `p:walking2` /
