@@ -1,5 +1,25 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.33 — versão atual (estável no jogo)
+
+Arquivo: `modelo/variantes/LAST/skin_v16.33_LAST.bbmodel`, gerado por `tools/movimento_last2.py` sobre a v16.30.
+
+O que o CPM permite, aprendido testando no jogo:
+- **Andar e agachado andando:** o CPM detecta "andando" pela mudança de posição entre quadros e entra e sai dessa pose
+  o tempo todo. Por isso um ciclo próprio recomeçava sem parar ("dá uma flicada e volta para o começo"). Agora usam o
+  balanço do próprio Minecraft (sincronizado, nunca recomeça) com postura por cima: leve inclinação, braços soltos e um
+  pouco abertos, transição suave de 0,3 s. As poses de item (arco, escudo, besta, luneta) voltam a ser as do
+  Minecraft e seguem a mira.
+- **Rastejar e nadar:** essas poses continuam ativas com você parado, então nada ali pode se mexer sozinho. As
+  braçadas e pernadas são as do Minecraft (só quando você se move) e por cima vai uma postura fixa: cabeça olhando à
+  frente e pernas um pouco abertas.
+- **Correr:** é estável (o CPM usa o próprio sprint). Continua com o nosso ciclo: passada, ombros, quique, inclinação
+  e cauda baixa.
+- **Pular:** também é estável. As pernas fazem o nosso ciclo de impulso, encolher e esticar; os braços continuam os
+  do Minecraft (itens funcionam).
+- **Agachado:** ombros mais baixos (−1 px), patas à frente.
+- **Golpe:** recriado pela fórmula do Minecraft, para aparecer também correndo.
+
 ## L.A.S.T v16.32 — correção: animações contínuas no jogo
 
 Arquivo atual: `modelo/variantes/LAST/skin_v16.32_LAST.bbmodel`. As animações são as mesmas da v16.31, com uma

@@ -1,20 +1,18 @@
-"""L.A.S.T only: real walking / running / sneaking / crawling / swimming / jumping cycles.
+"""L.A.S.T only: real running / jumping cycles, stable postures for everything else.
 
-usage: python3 tools/movimento_last2.py <skin_v16.30_LAST.bbmodel> <skin_v16.31_LAST.bbmodel>
+usage: python3 tools/movimento_last2.py <skin_v16.30_LAST.bbmodel> <skin_v16.33_LAST.bbmodel>
 
-On top of the vanilla swing, shoulders, weight and steps can not be synced (CPM does not expose the step phase),
-so in these states the arms and legs are driven by our own cycles (non-additive, at Minecraft's own tempo:
-0.55 s per stride walking, 0.47 s running) and everything else follows the same cycle (additive):
-- walk / run: legs with a real step (fast forward swing, planted push), arms swinging with follow-through,
-  shoulders twisting against the hips, body dropping on every contact, weight rolling onto the stance leg,
-  head stabilising; running leans forward with a stronger bounce, tail no longer pointing up;
-- sneak walk: slow stalking steps, paws low and forward; standing sneak: crouched, alert, breathing;
-- crawl: army crawl (arms reach forward one at a time, legs push like a frog, body rolls), head looking ahead;
-- swim: long flutter kicks (the vanilla arm strokes stay);
-- jump: push, tuck (legs out of step), reach for the ground; arms swing up and out;
-- turning: the legs twist with the body and the leg on that side steps out.
-Because the walking arms replace the vanilla ones, the item poses are recreated (non-additive, above the walk):
-shield, bow, crossbow (charging / loaded), spyglass, trident, goat horn, brush, eating and the attack swing.
+What CPM allows (learned in game):
+- A pose animation restarts every time the pose is entered. "Walking" / "sneak walking" are detected from the
+  position change between frames and are re-entered all the time, so a cycle of our own restarts constantly there.
+  Those keep the vanilla swing (synced, it never restarts) with an additive posture.
+- "Crawling" / "swimming" stay on while you lie still, so nothing there may move by itself: vanilla strokes (they
+  move only when you move) + a static posture.
+- "Running" (sprint flag) and "jumping" (jump event) are stable: there the arms/legs (running) and the legs
+  (jumping) are our own cycles (non-additive, at Minecraft's tempo) with shoulders, bob, weight and head in sync,
+  starting on the passing pose with a very short entry.
+- The attack swing is recreated (non-additive, from the vanilla formula) so it also shows while running.
+- Turning: the legs twist with the body and the leg on that side steps out.
 """
 import json, sys, os, math, uuid, copy
 import numpy as np
@@ -199,18 +197,34 @@ def install(cpm_type, walk, corpo, antic=0.06, over=0.08, strip_extra=()):
     stage(cpm_type, corpo, antic, over)
 
 
-# walking: Minecraft's walk is ~0.55 s per stride
-w, cp = gait('Andando', 'walking', 0.55, legs_amp=38, arm_amp=26, twist=6, bob=0.32, roll=1.6, lean=-3,
-             arm_fwd=2, arm_out=3, head_fix=2, lift=1.5)
-install('walking', w, cp, antic=0.0, over=0.0)
+def posture(cpm_type, name, lean=0.0, arms=(0.0, 0.0), arm_y=0.0, head=0.0, legs_z=0.0, antic=0.06, over=0.06):
+    """static additive posture over the vanilla swing (it never restarts or moves on its own)"""
+    main = main_of(cpm_type)
+    strip(main, BODY)
+    for st in staged_of(cpm_type).values():
+        strip(st, BODY)
+    a = Anim(name, cpm_type, main['length'])
+    up = upper_at(lean)
+    a.rot('body', c(up['body'][0])).pos('body', c(up['body'][1]))
+    a.pos('head', c(up['head'][1])).rot('head', c((head, 0.0, 0.0)))
+    for b, sgn in (('right_arm', 1), ('left_arm', -1)):
+        a.rot(b, c(add3(up[b][0], (arms[0], 0.0, sgn * arms[1]))))
+        a.pos(b, c(add3(up[b][1], (0.0, arm_y, 0.0))))
+    if legs_z:
+        a.rot('right_leg', c((0.0, 0.0, legs_z))).rot('left_leg', c((0.0, 0.0, -legs_z)))
+    emit(a)
+    stage(cpm_type, a, antic, over)
+
+
+# walking: CPM detects walking from the position change between frames and re-enters the pose all the time, so a
+# cycle of our own would keep restarting: walking keeps the vanilla swing (synced, never restarts) + posture
+posture('walking', 'Andando - postura', lean=-3, arms=(2.0, 4.0), head=0.5)
 # running: sprint stride is 0.47 s (Minecraft caps the limb speed), bigger and bouncier, leaning forward
 w, cp = gait('Correndo', 'running', 0.47, legs_amp=52, arm_amp=40, twist=9, bob=0.6, roll=2.2, lean=-12,
              arm_fwd=12, arm_out=5, head_fix=10, lift=2.0, tail_x=20)
 install('running', w, cp, antic=0.0, over=0.0)
-# sneak walk: slow stalking steps, paws low and forward (vanilla bends the body forward on top)
-w, cp = gait('Agachado andando', 'sneak_walk', 1.1, legs_amp=22, arm_amp=9, twist=3, bob=0.18, roll=1.0, lean=0,
-             arm_fwd=16, arm_out=4, head_fix=9, lift=1.0)
-install('sneak_walk', w, cp, antic=0.0, over=0.0)
+# sneak walk: same reason as walking (moving detection) -> posture: paws low and forward, shoulders down
+posture('sneak_walk', 'Agachado andando - postura', arms=(12.0, 4.0), arm_y=-1.0, head=8.0)
 
 # ================================================================== standing sneak: crouched, alert
 sn = main_of('sneaking')
@@ -221,51 +235,24 @@ a = Anim('Agachado - corpo', 'sneaking', sn['length'])
 br = lambda t: math.sin(2 * math.pi * t / sn['length'])
 a.rot('right_arm', lambda t: (17 + 1.0 * br(t - 0.1), 0.0, 5.0)).rot('left_arm', lambda t: (14 + 1.0 * br(t - 0.15), 0.0, -5.0))
 for b in ('right_arm', 'left_arm'):
-    a.pos(b, lambda t: (0.0, 0.18 * br(t), 0.0))                   # shoulders breathe
+    a.pos(b, lambda t: (0.0, -1.0 + 0.12 * br(t), 0.0))            # shoulders low, breathing
 a.rot('body', lambda t: (0.6 * br(t), 0.0, 0.7 * math.sin(2 * math.pi * t / sn['length'] + 1.0)))
 a.rot('head', lambda t: (10.0, 0.0, -0.4 * math.sin(2 * math.pi * t / sn['length'] + 0.7)))
 a.rot('right_leg', c((-2.0, 0.0, 2.0))).rot('left_leg', c((4.0, 0.0, -2.0)))  # feet apart, one a bit ahead
 emit(a)
 stage('sneaking', a, 0.08, 0.06)
 
-# ================================================================== crawling: army crawl
-L = 1.4
-cr = Anim('Rastejando - passos', 'crawling', L, additive=False, priority=P_WALK)
-reach_r = lerp_cycle([(0.0, 1.0), (0.18, 1.05), (0.5, -1.0), (0.62, -1.02)], L)  # reach forward, pull back
-cr.rot('right_arm', lambda t: (125 + 32 * reach_r(t), 0.0, 22 + 6 * max(0.0, -reach_r(t))))
-cr.rot('left_arm', lambda t: (125 + 32 * reach_r(t + 0.5 * L), 0.0, -22 - 6 * max(0.0, -reach_r(t + 0.5 * L))))
-push = lerp_cycle([(0.0, -1.0), (0.3, 1.0), (0.42, 1.04), (0.75, -0.6)], L)       # knee comes up, foot pushes
-cr.rot('right_leg', lambda t: (8 + 14 * push(t + 0.5 * L), 0.0, 10 + 8 * max(0.0, push(t + 0.5 * L))))
-cr.rot('left_leg', lambda t: (8 + 14 * push(t), 0.0, -10 - 8 * max(0.0, push(t))))
-crb = Anim('Rastejando - corpo', 'crawling', L)
-crb.rot('body', lambda t: (0.0, 3 * reach_r(t - 0.05 * L), 5 * reach_r(t - 0.08 * L)))
-crb.rot('head', lambda t: (20.0, -2 * reach_r(t - 0.12 * L), -3.5 * reach_r(t - 0.12 * L)))
-crm = main_of('crawling')
-strip(crm, BODY)
-for st in staged_of('crawling').values():
-    strip(st, BODY)
-shift(cr, 0.34 * L)                              # starts with the arms passing each other, not at full reach
-shift(crb, 0.34 * L)
-emit(cr)
-emit(crb)
-stage('crawling', crb, 0.0, 0.0)
-
-# ================================================================== swimming: long flutter kicks (arms keep the vanilla stroke)
-sw = main_of('swimming')
-strip(sw, LIMBS[2:])
-for st in staged_of('swimming').values():
-    strip(st, LIMBS[2:])
-k = Anim('Nadando - pernas', 'swimming', sw['length'], additive=False, priority=P_WALK)
-kick = lambda t, p: math.sin(2 * math.pi * (2 * t / sw['length'] + p))
-k.rot('right_leg', lambda t: (24 * kick(t, 0.0) + 4 * kick(t, 0.25) ** 3, 0.0, 4 + 2 * kick(t, 0.25)))
-k.rot('left_leg', lambda t: (24 * kick(t, 0.5) + 4 * kick(t, 0.75) ** 3, 0.0, -4 - 2 * kick(t, 0.75)))
-emit(k)
+# ================================================================== crawling / swimming
+# These poses stay on while you are lying still, so nothing here may move by itself: the vanilla swim/crawl strokes
+# (they only move when you move) + a static posture.
+posture('crawling', 'Rastejando - postura', head=16.0, legs_z=5.0)
+posture('swimming', 'Nadando - postura', head=12.0, legs_z=4.0)
 
 # ================================================================== jumping: legs and arms driven
 jm = main_of('jumping')
-strip(jm, LIMBS)
+strip(jm, LIMBS[2:])                                             # the arms keep their additive swing (items keep working)
 for st in staged_of('jumping').values():
-    strip(st, LIMBS)
+    strip(st, LIMBS[2:])
 J = Anim('Pulando - pernas', 'jumping', jm['length'], additive=False, priority=P_WALK)
 push_ = curve([(0, 1.0), (0.07, 1.0), (0.18, 0.0), (0.6, 0.0)])
 tuck_r = curve([(0, 0.0), (0.05, 0.0), (0.19, 1.06), (0.29, 0.94), (0.44, 0.22), (0.6, 0.15)])
@@ -273,10 +260,6 @@ tuck_l = curve([(0, 0.0), (0.09, 0.0), (0.24, 1.08), (0.33, 0.9), (0.47, 0.28), 
 reach_dn = curve([(0, 0.0), (0.3, 0.0), (0.46, 1.0), (0.6, 1.0)])
 J.rot('right_leg', lambda t: (-14 * push_(t) + 36 * tuck_r(t) + 4 * reach_dn(t), 0.0, 2 * tuck_r(t)))
 J.rot('left_leg', lambda t: (-10 * push_(t) + 26 * tuck_l(t) - 3 * reach_dn(t), 0.0, -2 * tuck_l(t)))
-up = curve([(0, 0.0), (0.08, 1.0), (0.2, 0.7), (0.4, 0.35), (0.6, 0.3)])
-out = curve([(0, 0.0), (0.12, 0.3), (0.3, 1.0), (0.45, 0.8), (0.6, 0.7)])
-J.rot('right_arm', lambda t: (34 * up(t), 0.0, 6 + 16 * out(t)))
-J.rot('left_arm', lambda t: (30 * up(max(0.0, t - 0.03)), 0.0, -6 - 17 * out(max(0.0, t - 0.03))))
 emit(J)
 
 # ================================================================== turning: legs follow and step out
@@ -295,32 +278,6 @@ def item(name, cpm_type, poses, value=False):
     an = Anim(name, cpm_type, 1.0, additive=False, priority=P_ITEM)
     for b, r in poses.items():
         an.rot(b, r if callable(r) else c(tuple(r)))
-    emit(an)
-
-
-for side, s in (('right', 1), ('left', -1)):
-    me, other = side + '_arm', ('left' if s > 0 else 'right') + '_arm'
-    nm = 'direita' if s > 0 else 'esquerda'
-    item('Escudo (%s)' % nm, 'blocking_' + side, {me: (54.0, 30.0 * s, 0.0)})
-    item('Arco (%s)' % nm, 'bow_' + side, {me: (90.0, 6.0 * s, 0.0), other: (90.0, -28.0 * s, 0.0)}, value=True)
-    item('Besta carregando (%s)' % nm, 'crossbow_ch_' + side,
-         {me: (55.6, 46.0 * s, 0.0), other: lambda t, s=s: (55.6 + 34.4 * t, -(23 + 26 * t) * s, 0.0)}, value=True)
-    item('Besta pronta (%s)' % nm, 'crossbow_' + side, {me: (84.3, 17.0 * s, 0.0), other: (86.0, -34.0 * s, 0.0)})
-    item('Luneta (%s) - braco' % nm, 'spyglass_' + side, {me: (110.0, 15.0 * s, 0.0)})
-    item('Tridente (%s)' % nm, 'trident_' + side, {me: (180.0, 0.0, 0.0)})
-    item('Corneta (%s)' % nm, 'toot_horn_' + side, {me: (85.0, 30.0 * s, 0.0)})
-    item('Pincel (%s)' % nm, 'brush_' + side, {me: (36.0, 0.0, 0.0)})
-
-# eating: the arm part becomes non-additive (full pose to the snout), head / body stay additive
-for side, s in (('right', 1), ('left', -1)):
-    me = side + '_arm'
-    ea = next(x for x in EXISTING if x['cpm_type'] == 'eating_' + side and x['cpm_additive'] and not x['name'].startswith('p:'))
-    arm_k = ea['animators'][UID[me]]['keyframes']
-    strip(ea, (me,))
-    an = Anim(ea['name'] + ' - braco', 'eating_' + side, ea['length'], additive=False, priority=P_ITEM)
-    keys = sorted([(k['time'], tuple(k['data_points'][0][a] for a in 'xyz')) for k in arm_k if k['channel'] == 'rotation'])
-    f = curve([(t, (v[0] + 18.0, v[1], v[2])) for t, v in keys], ease=lambda x: x)   # + the 18 deg vanilla used to give
-    an.rot(me, f)
     emit(an)
 
 
@@ -355,8 +312,7 @@ def stretch(anim, new_len):
     anim['length'] = new_len
 
 
-for typ, dur in (('walking', 0.1), ('running', 0.1), ('sneak_walk', 0.1), ('jumping', 0.05),
-                 ('crawling', 0.15), ('swimming', 0.15)):
+for typ, dur in (('running', 0.1), ('jumping', 0.05)):
     st = staged_of(typ)
     if 'setup' in st:
         stretch(st['setup'], dur)
