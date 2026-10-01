@@ -29,6 +29,9 @@ usage: python3 tools/variante.py <base.bbmodel> <skin64.png> <out.bbmodel> [--hi
   drop emote props (e.g. holo,bracelete) that no kept emote uses.
 - --slim: slim (3 px) arms, like a slim skin -- the arms (and sleeves) become 3 wide and read the slim layout.
 - --ear-blend: paints a soft transition on the head sides where the ears meet the head.
+- --smooth: 2nd-layer bits smaller than 4 px are painted on the base only (no floating blocks), the base under
+  the 2nd layer matches it, and close colours get soft dithered transitions.
+- --keep-tex <file.bbmodel>:elem.face,...: keeps the player's own painting on those faces.
 - --lambda: the orange mark on the chest becomes a crisp orange lambda symbol.
 - Tufts covered by the clothes (--hide: group or element names) are pointed at a transparent texel: the geometry stays, they just
   don't show.
@@ -179,6 +182,50 @@ def recolour_fur(T, d, stops, skip=NO_RECOLOUR):
     return int(m.sum())
 
 
+def components(mask):
+    """4-connected components of a boolean mask -> label array (0 = background) and sizes"""
+    lab = np.zeros(mask.shape, int)
+    sizes = [0]
+    n = 0
+    for y0, x0 in zip(*np.nonzero(mask)):
+        if lab[y0, x0]: continue
+        n += 1
+        stack = [(y0, x0)]
+        lab[y0, x0] = n
+        cnt = 0
+        while stack:
+            y, x = stack.pop()
+            cnt += 1
+            for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                yy, xx = y + dy, x + dx
+                if 0 <= yy < mask.shape[0] and 0 <= xx < mask.shape[1] and mask[yy, xx] and not lab[yy, xx]:
+                    lab[yy, xx] = n
+                    stack.append((yy, xx))
+        sizes.append(cnt)
+    return lab, np.array(sizes)
+
+
+def soften(big):
+    """transitions between close colours (cream/white, leather/leather...): the pixel on a soft boundary takes
+    the in-between colour on a checker, strong edges and saturated details stay crisp"""
+    a = big.astype(float)
+    out = a.copy()
+    L = lum(a)
+    sat = a[..., :3].max(-1) - a[..., :3].min(-1)
+    h, w = L.shape
+    for y in range(h):
+        for x in range(w):
+            if a[y, x, 3] == 0 or sat[y, x] > 70: continue
+            for dy, dx in ((0, 1), (1, 0), (0, -1), (-1, 0)):
+                yy, xx = y + dy, x + dx
+                if not (0 <= yy < h and 0 <= xx < w) or a[yy, xx, 3] == 0 or sat[yy, xx] > 70: continue
+                dL = abs(L[y, x] - L[yy, xx])
+                if 6 < dL < 46 and (x + y) % 2 == 0:
+                    out[y, x, :3] = (a[y, x, :3] * 0.55 + a[yy, xx, :3] * 0.45)
+                    break
+    return out.round().astype(np.uint8)
+
+
 def main():
     base, skin_path, out = sys.argv[1:4]
     hide, lam = [], '--lambda' in sys.argv
@@ -186,6 +233,8 @@ def main():
     head_top = int(sys.argv[sys.argv.index('--head-top') + 1]) if '--head-top' in sys.argv else 0
     acess = sys.argv[sys.argv.index('--acessorios') + 1] if '--acessorios' in sys.argv else None
     slim = '--slim' in sys.argv
+    smooth = '--smooth' in sys.argv                      # small loose 2nd-layer bits go to the base + soft transitions
+    keep_tex = sys.argv[sys.argv.index('--keep-tex') + 1] if '--keep-tex' in sys.argv else None
     ear_blend = '--ear-blend' in sys.argv
     brow = sys.argv[sys.argv.index('--brow') + 1] if '--brow' in sys.argv else None
     keep_emotes = sys.argv[sys.argv.index('--emotes') + 1].split(',') if '--emotes' in sys.argv else None
@@ -275,7 +324,8 @@ def main():
         sat = lambda c: (c[..., :3].max(-1).astype(int) - c[..., :3].min(-1)) > 60
         keep = sat(sm) | sat(nn)
         sm[keep] = nn[keep]
-        return finish(sm, seed=zlib.crc32((part + face + seed_extra).encode()))
+        out = finish(sm, seed=zlib.crc32((part + face + seed_extra).encode()))
+        return soften(out) if smooth else out
 
     def write(fc, big):
         u0, v0, u1, v1 = fc['uv']
@@ -289,6 +339,10 @@ def main():
     for part, ((bx, by), (ox, oy), (w, h, dd)) in limbs.items():
         for face, (x, y, fw, fh) in box_faces(bx, by, w, h, dd).items():
             a = sk[y:y + fh, x:x + fw].copy()
+            if smooth:                                      # the base under the 2nd layer matches it (no gaps)
+                xo, yo = box_faces(ox, oy, w, h, dd)[face][:2]
+                img = Image.fromarray(a); img.alpha_composite(Image.fromarray(sk[yo:yo + fh, xo:xo + fw].copy()))
+                a = np.array(img)
             a[..., 3] = 255
             big = upscale(a, part, face)
             if (part, face) in pelo:
@@ -334,6 +388,9 @@ def main():
         for face, (x, y, fw, fh) in box_faces(ox, oy, w, h, dd).items():
             a = sk[y:y + fh, x:x + fw].copy()
             fc = e['faces'][face]
+            if smooth:                                      # loose 1-3 px bits are only painted on the base
+                lab, sizes = components(a[..., 3] > 0)
+                a[(lab > 0) & (sizes[lab] < 4)] = 0
             if not (a[..., 3] > 0).any():                  # nothing on this face: keep it empty
                 fc['uv'], fc['texture'] = [0, 0, 0, 0], None
                 continue
@@ -475,6 +532,22 @@ def main():
             for k in [k for k in a['animators'] if k in gid]:
                 del a['animators'][k]
         print('props removed:', len(gid), 'groups,', len(eid), 'elements')
+
+    # --keep-tex <file.bbmodel>:elem.face,...  -> keep the player's own painting on those faces
+    if keep_tex:
+        kp, _, lst = keep_tex.partition(':')
+        kd = json.load(open(kp))
+        KT = np.array(Image.open(io.BytesIO(base64.b64decode(kd['textures'][0]['source'].split(',', 1)[1]))).convert('RGBA'))
+        KE = {}
+        for e in kd['elements']: KE.setdefault(e['name'], e)
+        for it in lst.split(','):
+            en, _, fn = it.partition('.')
+            src = KE[en]['faces'][fn]['uv']; dst = E[en]['faces'][fn]['uv']
+            r = lambda uv: (int(min(uv[1], uv[3])), int(max(uv[1], uv[3])), int(min(uv[0], uv[2])), int(max(uv[0], uv[2])))
+            a0, a1, b0, b1 = r(src); c0, c1, d0, d1 = r(dst)
+            assert (a1 - a0, b1 - b0) == (c1 - c0, d1 - d0), it
+            T[c0:c1, d0:d1] = KT[a0:a1, b0:b1]
+        print('kept the player\'s painting on:', lst)
 
     d['resolution'] = {'width': 256, 'height': 256}
     for k in ('width', 'height', 'uv_width', 'uv_height'):

@@ -262,16 +262,56 @@ def collar(w, h, seed=0):
     return a
 
 
+def gold_band(w, h, front_gap=0):
+    """gold band of the hood rim; front_gap = transparent middle (the face shows through at the front)"""
+    a = np.zeros((h, w, 4), np.uint8)
+    for y in range(h):
+        for x in range(w):
+            c = GOLDW[0] if y == 0 else GOLDW[1]
+            if y == 0 and x % 5 == 2: c = (242, 206, 146)               # highlights
+            if y == h - 1 and x % 3 == 0: c = GOLDW[2]
+            a[y, x] = (*c, 255)
+    if front_gap:
+        m = (w - front_gap) // 2
+        a[:, m:m + front_gap] = 0
+    return a
+
+
+def hood(w, h, seed=0):
+    """cream cloth of the hood/cowl with soft folds"""
+    a = np.zeros((h, w, 4), np.uint8)
+    for y in range(h):
+        for x in range(w):
+            c = CREAM[0] if (x + seed) % 5 in (1, 2) else CREAM[1]
+            if (x + seed) % 5 == 4: c = (228, 215, 205)
+            if y == h - 1: c = CREAM[2]
+            a[y, x] = (*c, 255)
+    return a
+
+
 def branca():
-    """3D collar around the neck (cream with gold trims), like the band on the skin's hat layer"""
-    return [('body', 'acess_gola', (0, 23.25, 0), [
-        ('gola', (-4.25, 22.25, -2.25), (4.25, 24.25, 2.25),
-         {'north': collar(17, 4, 0), 'south': collar(17, 4, 1), 'east': collar(9, 4, 2), 'west': collar(9, 4, 3),
-          'up': rows(17, [CREAM[1]] * 9), 'down': rows(17, [CREAM[3]] * 9)}),
-        ('gola_fecho', (-0.5, 22.75, -2.75), (0.5, 23.75, -2.25),
-         {'north': grid(["12", "23"], {'1': GOLDW[0], '2': GOLDW[1], '3': GOLDW[2]}),
-          'east': rows(1, [GOLDW[0], GOLDW[2]]), 'west': rows(1, [GOLDW[0], GOLDW[2]]),
-          'up': rows(2, [GOLDW[0]]), 'down': rows(2, [GOLDW[2]])})])]
+    """the hood rim / collar of the skin, in 3D: a gold band around the head (higher at the back, lower at the
+    front where only its corners show beside the muzzle), cream hood cloth below it and a cream cowl around the
+    neck with a gold clasp. Tilted 14 deg like the skin."""
+    TILT = {'rotation': [-14, 0, 0]}
+    return [
+        ('head', 'acess_capuz', (0, 25.5, 0), [
+            ('capuz_faixa', (-4.25, 25.25, -4.25), (4.25, 26.25, 4.25),
+             {'north': gold_band(17, 2, front_gap=11), 'south': gold_band(17, 2), 'east': gold_band(17, 2),
+              'west': gold_band(17, 2), 'up': rows(17, [GOLDW[0]] * 17), 'down': rows(17, [GOLDW[2]] * 17)}),
+            ('capuz_pano', (-4.25, 23.75, -4.25), (4.25, 25.25, 4.25),
+             {'north': hood(17, 3, 0), 'south': hood(17, 3, 1), 'east': hood(17, 3, 2), 'west': hood(17, 3, 3),
+              'down': rows(17, [CREAM[2]] * 17)}, {'origin': [0, 25.5, 0]}),
+        ], TILT),
+        ('body', 'acess_gola', (0, 23.0, 0), [
+            ('gola', (-4.25, 22.0, -2.75), (4.25, 24.0, 2.75),
+             {'north': hood(17, 4, 4), 'south': hood(17, 4, 5), 'east': hood(11, 4, 6), 'west': hood(11, 4, 7),
+              'up': rows(17, [CREAM[1]] * 11), 'down': rows(17, [CREAM[3]] * 11)}),
+            ('gola_fecho', (-0.5, 22.5, -3.25), (0.5, 23.5, -2.75),
+             {'north': grid(["12", "23"], {'1': GOLDW[0], '2': GOLDW[1], '3': GOLDW[2]}),
+              'east': rows(1, [GOLDW[0], GOLDW[2]]), 'west': rows(1, [GOLDW[0], GOLDW[2]]),
+              'up': rows(2, [GOLDW[0]]), 'down': rows(2, [GOLDW[2]])})]),
+    ]
 
 
 ACESSORIOS = {'cacadores': cacadores, 'branca': branca}

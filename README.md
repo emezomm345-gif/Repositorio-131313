@@ -26,6 +26,8 @@ aplica qualquer um na hora.
     tira os objetos dos emotes retirados (ex.: `holo,bracelete`).
   - `--slim`: braços slim (3 de largura) lendo o formato slim da skin; `--ear-blend`: transição pintada nas
     laterais da cabeça onde as orelhas encostam.
+  - `--smooth`: pedacinhos soltos (< 4 px) da 2ª camada vão só para a 1ª, a 1ª fica igual por baixo da 2ª e as
+    cores próximas ganham transição suave; `--keep-tex arquivo:peça.face,...` mantém pintura feita à mão.
   - `--hide`: grupos ou peças de tufo cobertos pela roupa/acessório (apontados para um texel transparente).
   - `--pelo parte.face[:linhas],...`: onde a skin pintou um acessório verde que a variante não usa (bandana),
     mostra o pelo do próprio Emezomm (já com a cor da variante).
@@ -65,12 +67,16 @@ aplica qualquer um na hora.
   escura (destaca), **transição suave** pintada nas laterais da cabeça onde as orelhas encostam. **Braços slim**
   (3 de largura, como a skin — sem bug nos ombros). Roupa de cavaleiro: tabardo creme com **cruz dourada**,
   ombreiras e braços de couro escuro com detalhes dourados, cinto, calça e botas com rebites dourados, com a
-  segunda camada. **Gola 3D** creme com friso e fecho dourados. Tufos do peito escondidos pelo tabardo.
+  segunda camada (pedacinhos soltos da 2ª camada vão para a 1ª e as cores próximas têm transição suave:
+  `--smooth`). **Gola do capuz em 3D** como na skin: faixa dourada em volta da cabeça (mais alta atrás, mais
+  baixa na frente, onde só os cantos aparecem ao lado do focinho), pano creme abaixo dela e gola creme no pescoço
+  com fecho dourado. Tufos do peito, das bochechas e o último da nuca ficam sob a roupa/gola. A pintura que você
+  fez nos ombros (`ajuste_usuario_v16.29_BRANCA.bbmodel`) é mantida (`--keep-tex`).
   **Emotes:** expressões (Raiva, Super serio, WTF, Tranquilidade), Investigar, Pouso de heroi, Estalar o pescoco e
   as configurações (orelhas, cauda, capacete). Retirados: todos os tecnológicos (com hologramas e bracelete),
   Alongamento, Deitar e olhar o ceu, Pensativo, Tristeza, Sentado no bloco e Saudacao.
   Prévia: `previews/variante_BRANCA.png`.
-  Comando: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/BRANCA/skin_BRANCA_64x64_original.png modelo/variantes/BRANCA/skin_v16.28_BRANCA.bbmodel --fur branco --brow branco --acessorios branca --hide fur_chest --slim --ear-blend --emotes "Raiva,Super serio,WTF,Tranquilidade,Investigar,Pouso de heroi,Estalar o pescoco,Esconder orelhas,Esconder cauda,Ignorar capacete" --remove-props holo,bracelete`
+  Comando: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/BRANCA/skin_BRANCA_64x64_original.png modelo/variantes/BRANCA/skin_v16.28_BRANCA.bbmodel --fur branco --brow branco --acessorios branca --hide fur_chest,fur_cheek_R,fur_cheek_L,bochechas,fur_back_4 --slim --ear-blend --smooth --keep-tex "modelo/variantes/BRANCA/ajuste_usuario_v16.29_BRANCA.bbmodel:left_arm.west,left_arm.up,right_arm.east,right_arm.up" --emotes "Raiva,Super serio,WTF,Tranquilidade,Investigar,Pouso de heroi,Estalar o pescoco,Esconder orelhas,Esconder cauda,Ignorar capacete" --remove-props holo,bracelete`
 
 **Aviso sobre o Blockbench:** as transições de entrada e saída do CPM têm o **mesmo nome** (ex.: `p:walking` e
 `g:Raiva`, uma "setup" e outra "finish"). Ao abrir o projeto, o Blockbench renomeia a segunda para `p:walking2` /
