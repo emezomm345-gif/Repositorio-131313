@@ -63,7 +63,23 @@ aplica qualquer um na hora.
     e depois `python3 tools/cacadores_emotes.py modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel`
     (`tools/animlib.py` = ferramentas de animação compartilhadas com o gerador principal).
 
-- **Templário — versão atual: `modelo/variantes/BRANCA/skin_v16.32_BRANCA.bbmodel`** (+ `Emezomm-CPM_v16.32_BRANCA_256.png`):
+- **Templário — versão atual: `modelo/variantes/BRANCA/skin_v16.33_BRANCA.bbmodel`** (+ `Emezomm-CPM_v16.33_BRANCA_256.png`):
+  o seu v16.32 (nada dele mudou: elementos, grupos, animações e pixels pintados ficam idênticos) + os emotes finais
+  (prévia: `previews/variante_BRANCA_emotes.gif`):
+  - **Rezar** (contínuo, até você se mover): fecha os olhos, abaixa a cabeça e junta as mãos segurando um
+    **crucifixo dourado grande** (com um rubi no centro), respirando devagar, orelhas para trás, cauda calma.
+  - **Meditacao extrema** (contínuo): flutua no ar de pernas cruzadas e olhos fechados, sobe e desce devagar, o corpo
+    gira de leve, a cauda e os pelos ondulam como se estivessem sem peso.
+  - **Subestimar** (expressão alternável, só no rosto, como Raiva/WTF): "e isso?" — uma sobrancelha erguida, o outro
+    olho meio fechado de tédio, olhando para baixo, orelhas de lado e uma bufada pelo focinho.
+  - **Explosao de luz** (gesto de duração): o crucifixo aparece nas mãos juntas, ele o ergue com as duas mãos acima da
+    cabeça e a cruz solta uma **explosão de luz** (raios brilhantes em 3D + clarão, com brilho `glow`), que empurra o
+    corpo, as orelhas, os pelos e a cauda; depois a luz some e ele abaixa a cruz.
+  - O crucifixo e a luz são peças novas, escondidas dentro do braço direito fora desses emotes (invisíveis em
+    qualquer ângulo) e pintadas em espaço livre do atlas. Os olhos fechados usam uma animação de pálpebras própria
+    chamada `<emote>#olhos`: o CPM ignora o que vem depois do `#`, então ela faz parte do mesmo botão.
+  - Gerar: `python3 tools/templario_emotes.py modelo/variantes/BRANCA/skin_v16.32_BRANCA.bbmodel modelo/variantes/BRANCA/skin_v16.33_BRANCA.bbmodel`
+- **Templário v16.32** — `modelo/variantes/BRANCA/skin_v16.32_BRANCA.bbmodel` (+ `Emezomm-CPM_v16.32_BRANCA_256.png`):
   é o seu arquivo com os ajustes e melhorias de textura (`ajuste_usuario_v16.32_BRANCA.bbmodel`) + a **cruz dourada
   nas costas**, copiada da cruz da frente (mesmo dourado e sombreado, simétrica, no painel branco das costas). Só a
   textura das costas mudou (88 pixels). A partir daqui o arquivo de referência do Templário é este, com as suas
