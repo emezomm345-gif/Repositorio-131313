@@ -20,6 +20,32 @@ import numpy as np
 SRC, OUT = sys.argv[1], sys.argv[2]
 d = json.load(open(SRC))
 FPS = 20
+
+# --- 'corpo_mov': a group inside the body that holds everything the torso carries (torso cubes, chest fur, tail).
+# The walking sway moves this group, not the vanilla body, so the "rest" that switches the sway off never touches
+# Minecraft's own body pose (crouching on ladders / vines kept breaking when the rest acted on the body itself).
+import copy as _copy, uuid as _uuid
+_G = {g['uuid']: g for g in d['groups']}
+
+
+def _node(ns, name):
+    for n in ns:
+        if isinstance(n, dict):
+            if _G[n['uuid']]['name'] == name:
+                return n
+            r = _node(n['children'], name)
+            if r:
+                return r
+
+
+if not any(g['name'] == 'corpo_mov' for g in d['groups']):
+    _b = _node(d['outliner'], 'body')
+    _g = _copy.deepcopy(_G[_b['uuid']])
+    _g.update(name='corpo_mov', uuid=str(_uuid.uuid4()), origin=[0, 24, 0], rotation=[0, 0, 0])
+    for k in [k for k in _g if k.startswith('cpm_') and k not in ('cpm_data',)]:
+        _g[k] = False if isinstance(_g[k], bool) else _g[k]
+    d['groups'].append(_g)
+    _b['children'] = [{'uuid': _g['uuid'], 'isOpen': False, 'children': _b['children']}]
 n_groups = len(d['groups'])
 exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'animlib.py')).read())
 assert len(d['groups']) == n_groups
@@ -255,15 +281,15 @@ def lively_walk():
             memo[k] = upper_at(-1.0 * bob(t), 3.5 * twist(t), 1.6 * roll(t), drop=(0, -0.3 * bob(t), 0))
         return memo[k]
     # only the body: a non-additive "rest" on the head or arms would also lock their vanilla rotation (look, swing)
-    g.rot('body', lambda t: tuple(at(t)['body'][0]))
-    g.pos('body', lambda t: tuple(at(t)['body'][1]))
+    g.rot('corpo_mov', lambda t: tuple(at(t)['body'][0]))
+    g.pos('corpo_mov', lambda t: tuple(at(t)['body'][1]))
     emit(g)
     # ---- every other state: back to rest (vanilla values) for exactly those channels
     E = 0.02                                        # CPM drops a channel equal to the default: keep it just off
-    rest = {'body': ((E, 0.0, 0.0), (0.0, E, 0.0))}
-    sneak = {'body': ((-28.648, 0.0, 0.0), (0.0, -3.2, 0.0))}                          # vanilla crouch
+    rest = {'corpo_mov': ((E, 0.0, 0.0), (0.0, E, 0.0))}
+    sneak = rest                                   # the vanilla body (crouch) is not touched any more
     poses = ['standing', 'running', 'sneaking', 'sneak_walk', 'swimming', 'falling', 'sleeping', 'riding', 'flying',
-             'dying', 'creative_flying', 'trident_spin', 'crawling', 'jumping']
+             'dying', 'creative_flying', 'trident_spin', 'crawling', 'jumping', 'on_ladder', 'climbing_on_ladder']
     # no rest on ladders / vines: you can crouch there (the ladder pose wins over sneaking in CPM), and a fixed rest
     # would undo Minecraft's crouch on the torso only (torso upright, legs pushed back)
     customs = [x['name'] for x in EXISTING if x['cpm_type'] == 'custom_pose' and '#' not in x['name']]

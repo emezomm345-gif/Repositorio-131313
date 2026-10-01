@@ -1,5 +1,17 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.46 — peito parado na escada / trepadeira
+
+Arquivo atual: `modelo/variantes/LAST/skin_v16.46_LAST.bbmodel`.
+
+O balanço do andar agora move um grupo novo, `corpo_mov`, que fica dentro do `body` e contém tudo o que o tronco
+carrega: tronco, pelos do peito e cauda. O "Repouso do corpo" que desliga o balanço também age só nesse grupo e
+nunca no corpo do Minecraft.
+
+- **Escada / trepadeira:** o repouso voltou para essas poses. O peito não se mexe mais sozinho, e agachar ali
+  continua sendo o agachar do Minecraft.
+- **Modelo:** visualmente é igual, porque o grupo novo não muda nada parado.
+
 ## L.A.S.T v16.45 — agachar na escada / trepadeira
 
 Arquivo atual: `modelo/variantes/LAST/skin_v16.45_LAST.bbmodel`.
