@@ -24,6 +24,8 @@ aplica qualquer um na hora.
   - `--brow <paleta>`: cor da sobrancelha (faixa) combinando com o pelo da variante.
   - `--emotes <nomes>`: mantém só esses emotes/configurações (e suas transições); `--remove-props <prefixos>`
     tira os objetos dos emotes retirados (ex.: `holo,bracelete`).
+  - `--slim`: braços slim (3 de largura) lendo o formato slim da skin; `--ear-blend`: transição pintada nas
+    laterais da cabeça onde as orelhas encostam.
   - `--hide`: grupos ou peças de tufo cobertos pela roupa/acessório (apontados para um texel transparente).
   - `--pelo parte.face[:linhas],...`: onde a skin pintou um acessório verde que a variante não usa (bandana),
     mostra o pelo do próprio Emezomm (já com a cor da variante).
@@ -57,14 +59,18 @@ aplica qualquer um na hora.
     e depois `python3 tools/cacadores_emotes.py modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel`
     (`tools/animlib.py` = ferramentas de animação compartilhadas com o gerador principal).
 
-- **Variante branca** — `modelo/variantes/BRANCA/skin_v16.28_BRANCA.bbmodel` (+ `Emezomm-CPM_v16.28_BRANCA_256.png`),
-  da skin `skin_BRANCA_64x64_original.png`. Pelo escuro vira **branco/cinza-claro** (o branco original continua),
-  rosto igual, sobrancelha cinza. Roupa de cavaleiro: tabardo creme com **cruz dourada**, ombreiras e braços de
-  couro escuro com detalhes dourados, cinto, calça e botas escuras com rebites dourados, com a segunda camada.
-  **Gola 3D** creme com friso dourado e fecho no pescoço (a faixa dourada da camada de chapéu da skin). Tufos do
-  peito escondidos pelo tabardo. Todas as animações, emotes e configurações do Emezomm original.
+- **Templário (variante branca)** — `modelo/variantes/BRANCA/skin_v16.28_BRANCA.bbmodel`
+  (+ `Emezomm-CPM_v16.28_BRANCA_256.png`), da skin `skin_BRANCA_64x64_original.png`. Pelo escuro vira
+  **branco/cinza-claro** (o branco original continua), rosto igual, **sobrancelha** no branco do pelo só que mais
+  escura (destaca), **transição suave** pintada nas laterais da cabeça onde as orelhas encostam. **Braços slim**
+  (3 de largura, como a skin — sem bug nos ombros). Roupa de cavaleiro: tabardo creme com **cruz dourada**,
+  ombreiras e braços de couro escuro com detalhes dourados, cinto, calça e botas com rebites dourados, com a
+  segunda camada. **Gola 3D** creme com friso e fecho dourados. Tufos do peito escondidos pelo tabardo.
+  **Emotes:** expressões (Raiva, Super serio, WTF, Tranquilidade), Investigar, Pouso de heroi, Estalar o pescoco e
+  as configurações (orelhas, cauda, capacete). Retirados: todos os tecnológicos (com hologramas e bracelete),
+  Alongamento, Deitar e olhar o ceu, Pensativo, Tristeza, Sentado no bloco e Saudacao.
   Prévia: `previews/variante_BRANCA.png`.
-  Comando: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/BRANCA/skin_BRANCA_64x64_original.png modelo/variantes/BRANCA/skin_v16.28_BRANCA.bbmodel --fur branco --acessorios branca --hide fur_chest`
+  Comando: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/BRANCA/skin_BRANCA_64x64_original.png modelo/variantes/BRANCA/skin_v16.28_BRANCA.bbmodel --fur branco --brow branco --acessorios branca --hide fur_chest --slim --ear-blend --emotes "Raiva,Super serio,WTF,Tranquilidade,Investigar,Pouso de heroi,Estalar o pescoco,Esconder orelhas,Esconder cauda,Ignorar capacete" --remove-props holo,bracelete`
 
 **Aviso sobre o Blockbench:** as transições de entrada e saída do CPM têm o **mesmo nome** (ex.: `p:walking` e
 `g:Raiva`, uma "setup" e outra "finish"). Ao abrir o projeto, o Blockbench renomeia a segunda para `p:walking2` /

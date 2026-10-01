@@ -27,11 +27,13 @@ usage: python3 tools/variante.py <base.bbmodel> <skin64.png> <out.bbmodel> [--hi
 - --brow <palette>: colour of the brow band (palpebra_R/L) to match the variant's fur.
 - --emotes <names>: keep only these emotes / settings (and their transitions); --remove-props <prefixes>:
   drop emote props (e.g. holo,bracelete) that no kept emote uses.
+- --slim: slim (3 px) arms, like a slim skin -- the arms (and sleeves) become 3 wide and read the slim layout.
+- --ear-blend: paints a soft transition on the head sides where the ears meet the head.
 - --lambda: the orange mark on the chest becomes a crisp orange lambda symbol.
 - Tufts covered by the clothes (--hide: group or element names) are pointed at a transparent texel: the geometry stays, they just
   don't show.
 """
-import sys, json, base64, io, zlib, uuid, copy, os
+import sys, json, base64, io, zlib, uuid, copy, os, math
 import numpy as np
 from PIL import Image
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -137,6 +139,8 @@ FUR_PALETTES = {   # brightness of the DARK base fur -> colour (light fur is nev
 }
 BROW_PALETTES = {  # brightness of the grey brow band -> colour (darker than the fur so it still reads as a brow)
     'verde': [(0, (0, 14, 6)), (40, (0, 22, 9)), (60, (0, 34, 14)), (97, (24, 118, 52)), (255, (60, 160, 80))],
+    'branco': [(0, (128, 128, 128)), (40, (156, 156, 156)), (60, (178, 178, 178)), (97, (204, 204, 204)),
+               (255, (228, 228, 228))],                       # the white fur, a bit darker so the brow stands out
 }
 LIGHT_FUR = (70, 130)   # brightness where the recolour fades out: from here up the white/grey fur stays as it is
 NO_RECOLOUR = ('eye_R_iris', 'eye_L_iris', 'nose', 'palpebra_R', 'palpebra_L', 'hat', 'jacket', 'sleeve', 'Pant',
@@ -181,6 +185,8 @@ def main():
     fur = sys.argv[sys.argv.index('--fur') + 1] if '--fur' in sys.argv else None
     head_top = int(sys.argv[sys.argv.index('--head-top') + 1]) if '--head-top' in sys.argv else 0
     acess = sys.argv[sys.argv.index('--acessorios') + 1] if '--acessorios' in sys.argv else None
+    slim = '--slim' in sys.argv
+    ear_blend = '--ear-blend' in sys.argv
     brow = sys.argv[sys.argv.index('--brow') + 1] if '--brow' in sys.argv else None
     keep_emotes = sys.argv[sys.argv.index('--emotes') + 1].split(',') if '--emotes' in sys.argv else None
     drop_props = sys.argv[sys.argv.index('--remove-props') + 1].split(',') if '--remove-props' in sys.argv else []
@@ -217,6 +223,24 @@ def main():
         print('fur texels recoloured:', recolour_fur(T, d, FUR_PALETTES[fur]))
         LIMB_NAMES = ('body', 'right_arm', 'left_arm', 'right_leg', 'left_leg')
         recolour_fur(T_fur, d, FUR_PALETTES[fur], skip=tuple(n for n in NO_RECOLOUR if n not in LIMB_NAMES))
+    if ear_blend:
+        # soft transition where the ears meet the head sides (ear roots at y 28..32, z -1..3.5): the fur gets a
+        # little darker near the root and fades into the head colour, with a few pixel-art strands going down
+        head = next(e for e in d['elements'] if e['name'] == 'head')['faces']
+        for face, u_of in (('east', lambda z: (4 - z) * 2), ('west', lambda z: (z + 4) * 2)):
+            u0, v0 = head[face]['uv'][:2]
+            for py in range(0, 12):
+                y = 32 - (py + 0.5) / 2
+                for px in range(16):
+                    z = (4 - (px + 0.5) / 2) if face == 'east' else ((px + 0.5) / 2 - 4)
+                    dist = math.hypot((z - 1.4) / 3.0, (y - 30.2) / 2.6)
+                    k = max(0.0, 1 - dist)                       # 1 at the ear root, 0 away from it
+                    if k <= 0: continue
+                    strand = (px % 3 == 1) and py < 11 and ((py + px // 3) % 4 != 3)
+                    amt = 0.17 * k + (0.10 * k if strand else 0) + (0.04 if (px + py) % 2 == 0 and k > 0.25 else 0)
+                    c = T[v0 + py, u0 + px, :3].astype(float)
+                    T[v0 + py, u0 + px, :3] = np.clip(c * (1 - amt), 0, 255).astype(np.uint8)
+        print('ear transition painted')
     sk = np.array(Image.open(skin_path).convert('RGBA'))
     sk[sk[..., 3] < 128] = 0
     ORANGE = lambda c: (c[..., 0] > 200) & (c[..., 1] < 170) & (c[..., 2] < 90) & (c[..., 3] > 0)
@@ -226,6 +250,22 @@ def main():
                   if not ORANGE(sk[y + dy, x + dx][None])[0]]
             sk[y, x] = max(nb, key=lambda c: int(c[:3].sum())) if nb else sk[y, x]
     E = {e['name']: e for e in d['elements']}
+    limbs = dict(LIMBS)
+    if slim:
+        # slim (3 px) arms like the skin: arms 3 wide (x 4..7 / -7..-4), sleeves too; UV rects narrowed
+        limbs['right_arm'] = ((40, 16), (40, 32), (3, 12, 4))
+        limbs['left_arm'] = ((32, 48), (48, 48), (3, 12, 4))
+        for e in d['elements']:
+            cx = (e['from'][0] + e['to'][0]) / 2
+            if e['name'] in ('right_arm', 'left_arm', 'sleeve'):
+                if cx > 0: e['to'][0] = e['from'][0] + 3
+                else: e['from'][0] = e['to'][0] - 3
+                e['origin'] = [(e['from'][i] + e['to'][i]) / 2 for i in range(3)]
+            if e['name'] in ('right_arm', 'left_arm'):
+                for k in ('north', 'south', 'up', 'down'):
+                    u0, v0, u1, v1 = e['faces'][k]['uv']
+                    if u1 >= u0: e['faces'][k]['uv'] = [u0, v0, u0 + 6, v1]
+                    else: e['faces'][k]['uv'] = [u0, v0, u0 - 6, v1]
 
     def upscale(a, part, face, seed_extra=''):
         if face == 'up':
@@ -246,7 +286,7 @@ def main():
         T[y0:y1, x0:x1] = big
 
     # --- base layer (opaque)
-    for part, ((bx, by), (ox, oy), (w, h, dd)) in LIMBS.items():
+    for part, ((bx, by), (ox, oy), (w, h, dd)) in limbs.items():
         for face, (x, y, fw, fh) in box_faces(bx, by, w, h, dd).items():
             a = sk[y:y + fh, x:x + fw].copy()
             a[..., 3] = 255
@@ -289,7 +329,7 @@ def main():
         shelf[2] = max(shelf[2], h_)
         assert r[3] <= 256, 'no room'
         return r
-    for part, ((bx, by), (ox, oy), (w, h, dd)) in LIMBS.items():
+    for part, ((bx, by), (ox, oy), (w, h, dd)) in limbs.items():
         e = shells[part]
         for face, (x, y, fw, fh) in box_faces(ox, oy, w, h, dd).items():
             a = sk[y:y + fh, x:x + fw].copy()
