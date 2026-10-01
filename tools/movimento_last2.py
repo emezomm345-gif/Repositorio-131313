@@ -263,7 +263,9 @@ def lively_walk():
     rest = {'body': ((E, 0.0, 0.0), (0.0, E, 0.0))}
     sneak = {'body': ((-28.648, 0.0, 0.0), (0.0, -3.2, 0.0))}                          # vanilla crouch
     poses = ['standing', 'running', 'sneaking', 'sneak_walk', 'swimming', 'falling', 'sleeping', 'riding', 'flying',
-             'dying', 'creative_flying', 'trident_spin', 'crawling', 'climbing_on_ladder', 'on_ladder', 'jumping']
+             'dying', 'creative_flying', 'trident_spin', 'crawling', 'jumping']
+    # no rest on ladders / vines: you can crouch there (the ladder pose wins over sneaking in CPM), and a fixed rest
+    # would undo Minecraft's crouch on the torso only (torso upright, legs pushed back)
     customs = [x['name'] for x in EXISTING if x['cpm_type'] == 'custom_pose' and '#' not in x['name']]
     for typ in poses + customs:
         vals = sneak if typ in ('sneaking', 'sneak_walk') else rest

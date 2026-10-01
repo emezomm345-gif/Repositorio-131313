@@ -1,5 +1,13 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.45 — agachar na escada / trepadeira
+
+Arquivo atual: `modelo/variantes/LAST/skin_v16.45_LAST.bbmodel`.
+
+Na escada e na trepadeira, o CPM usa a pose de escada mesmo quando você está agachado. O "Repouso do corpo" fixava
+o tronco em pé e na posição normal, enquanto o Minecraft agachava as pernas e os braços; ficava quebrado (tronco de
+um jeito, pernas para trás). Esse repouso saiu das poses de escada, e agachar ali volta a ser o agachar do Minecraft.
+
 ## L.A.S.T v16.44 — pulo e comer padrão, dois emotes removidos, cauda da corrida
 
 Arquivo atual: `modelo/variantes/LAST/skin_v16.44_LAST.bbmodel`.
