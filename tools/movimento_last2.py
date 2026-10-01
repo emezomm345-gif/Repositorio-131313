@@ -258,14 +258,14 @@ def lively_walk():
     S = 0.55                                        # Minecraft walking stride (vanilla swing tempo)
     # ---- fixed posture in the walking pose (shows from the first frame)
     p = Anim('Andando - postura', 'walking', 1.0)
-    up = upper_at(-5)
+    up = upper_at(-2.5)
     p.rot('body', c(up['body'][0]))
     for b, sgn in (('right_arm', 1), ('left_arm', -1)):
         # arms carried a little forward and loose, hands turned in (a relaxed, purposeful walk, not arms at the sides)
-        p.rot(b, c(add3(up[b][0], (9.0, -sgn * 6.0, sgn * 6.0))))
+        p.rot(b, c(add3(up[b][0], (4.5, -sgn * 3.0, sgn * 3.0))))
     for b, sgn in (('right_leg', 1), ('left_leg', -1)):
-        p.rot(b, c((0.0, sgn * 3.0, sgn * 1.5)))       # feet slightly out, wider stance
-    p.rot('head', c((5.0, 0.0, 0.0)))
+        p.rot(b, c((0.0, sgn * 1.5, sgn * 0.75)))       # feet slightly out, wider stance
+    p.rot('head', c((2.5, 0.0, 0.0)))
     emit(p)
     # ---- the moving layer (global, never restarts)
     L = S * 8

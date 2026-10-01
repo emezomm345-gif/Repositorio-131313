@@ -1,5 +1,13 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.47 — começar / parar de andar mais suave
+
+Arquivo atual: `modelo/variantes/LAST/skin_v16.47_LAST.bbmodel`.
+
+O CPM não deixa a pose de andar ter transição: ela é reiniciada o tempo todo no jogo, então qualquer transição
+recomeça sem parar e trava. A troca parado ↔ andando é sempre instantânea. O que dá para fazer é diminuir o tamanho
+do salto: a postura fixa do andar caiu pela metade (inclinação, braços, pés, cabeça). O balanço do peito continua.
+
 ## L.A.S.T v16.46 — peito parado na escada / trepadeira
 
 Arquivo atual: `modelo/variantes/LAST/skin_v16.46_LAST.bbmodel`.
