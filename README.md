@@ -1,5 +1,42 @@
 # Skin CPM – tufos de pelo
 
+## Movimento do corpo (v16.29 / Templário v16.34)
+
+O CPM não usa animações de texture pack (Fresh Animations etc.). Por isso `tools/movimento.py` anima o corpo em todos
+os estados de movimento, seguindo as regras de animação avançada (preparação, peso, atraso entre as partes,
+overshoot, assentamento, loops contínuos):
+
+- **Braços e pernas:** o balanço de braços/pernas do próprio Minecraft continua. É o único sincronizado com a sua
+  velocidade real e mantém as poses de item funcionando (arco seguindo a mira, escudo, besta, luneta). Por cima dele
+  entram postura, peso, inclinação e reações.
+- **Andando:** leve inclinação, braços soltos ao lado do corpo, cabeça compensando.
+- **Correndo:** tronco bem inclinado para a frente, cabeça olhando adiante, braços mais à frente.
+- **Agachado:** postura de raposa espreitando, patas prontas.
+- **Pulando:** impulso, encolhe as pernas, estica para a aterrissagem.
+- **Caindo:** braços abertos se equilibrando, pernas prontas, olhando para baixo.
+- **Atacando:** preparação, golpe com giro do tronco, o outro braço em contrapeso, peso no pé da frente,
+  continuação do movimento e assentamento. É sincronizado com o próprio golpe (o CPM toca essa animação pelo
+  progresso do ataque).
+- **Comendo / bebendo** (novo, mão direita ou esquerda): leva a comida à frente do focinho e mastiga.
+- **Escada:** mãos nos degraus; subindo, mãos e pés alternam.
+- **Nadando / rastejando:** onda no corpo, cabeça olhando para a frente.
+- **Elytra:** corpo aerodinâmico, braços para trás.
+- **Voo criativo:** pairando com as pernas soltas.
+- **Dormindo:** encolhido como raposa.
+- **Montado:** mãos nas rédeas.
+- **Machucado:** impacto, recuo e recuperação.
+- **Morrendo:** o corpo amolece.
+- **Pegando fogo:** batendo nas chamas.
+- **Congelando:** se abraçando e tremendo.
+- **Parado:** troca de peso bem sutil.
+- Tudo entra e sai suave (`p:<pose>`), e as animações que já existiam (cauda, orelhas, pelos) continuam iguais.
+  Modelo e textura não mudam.
+- Prévia: `previews/variante_LAST_movimento.gif`. O balanço de braços/pernas da prévia é simulado; no jogo é o do
+  Minecraft.
+- Arquivos: `modelo/skin_v16.29.bbmodel`, `modelo/variantes/LAST/skin_v16.29_LAST.bbmodel`,
+  `modelo/variantes/BRANCA/skin_v16.34_BRANCA.bbmodel`.
+- Gerar: `python3 tools/movimento.py <modelo.bbmodel> <saida.bbmodel>`. Também funciona no arquivo dos Caçadores.
+
 ## Variantes (universo L.A.S.T)
 
 Mesma estrutura, mesmo rosto, mesmas animações/emotes/expressões — só a textura da roupa (e, quando a variante
