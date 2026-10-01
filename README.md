@@ -1,5 +1,20 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.32 — correção: animações contínuas no jogo
+
+Arquivo atual: `modelo/variantes/LAST/skin_v16.32_LAST.bbmodel`. As animações são as mesmas da v16.31, com uma
+correção.
+
+**O problema no jogo:** no CPM, as animações de uma pose só começam depois da transição de entrada (`p:<pose>`
+setup). Ela durava 0,3 s andando e 0,45 s correndo, e nesse tempo aparecia o balanço do Minecraft. Ao entrar de novo
+na pose (por exemplo, depois de cada pulo), o ciclo voltava ao começo: parecia que fazia a animação e voltava para a
+inicial.
+
+**A correção:**
+- As entradas de andar, correr, agachado andando, pular, rastejar e nadar agora são curtas (0,05–0,15 s).
+- Os ciclos começam na posição de passagem (pernas juntas, braços embaixo), perto de onde o balanço do Minecraft
+  também está. Entrar na pose ou voltar a ela depois de um pulo não dá mais tranco.
+
 ## L.A.S.T v16.31 — passos de verdade (andar, correr, agachar, rastejar, nadar, pular)
 
 Arquivo `modelo/variantes/LAST/skin_v16.31_LAST.bbmodel`, gerado por `tools/movimento_last2.py` sobre a v16.30.

@@ -130,6 +130,16 @@ def lerp_cycle(points, L):
 
 
 # ================================================================== the walking / running cycle
+PASSING = 0.31                                  # phase of the cycle where the right leg passes under the body
+
+
+def shift(an, dt):
+    """move the start of a loop by dt (the cycle itself is unchanged)"""
+    for chans in an.tracks.values():
+        for ch, fns in chans.items():
+            chans[ch] = [(lambda f: lambda t: f(t + dt))(f) for f in fns]
+
+
 def gait(name, cpm_type, L, legs_amp, arm_amp, twist, bob, roll, lean, arm_fwd, arm_out, head_fix,
          lift=0.0, tail_x=0.0, extra_corpo=None):
     """non-additive limbs + additive body for one locomotion cycle of length L (phase 0 = right leg forward)"""
@@ -172,6 +182,10 @@ def gait(name, cpm_type, L, legs_amp, arm_amp, twist, bob, roll, lean, arm_fwd, 
         corpo.rot('cauda', c((tail_x, 0.0, 0.0)))
     if extra_corpo:
         extra_corpo(corpo)
+    # start the loop on the passing pose (legs together, arms down): entering the pose, or coming back to it after
+    # a jump, then starts where the vanilla swing also is, instead of snapping to a stretched stride
+    for an in (walk, corpo):
+        shift(an, PASSING * L)
     return walk, corpo
 
 
@@ -188,15 +202,15 @@ def install(cpm_type, walk, corpo, antic=0.06, over=0.08, strip_extra=()):
 # walking: Minecraft's walk is ~0.55 s per stride
 w, cp = gait('Andando', 'walking', 0.55, legs_amp=38, arm_amp=26, twist=6, bob=0.32, roll=1.6, lean=-3,
              arm_fwd=2, arm_out=3, head_fix=2, lift=1.5)
-install('walking', w, cp)
+install('walking', w, cp, antic=0.0, over=0.0)
 # running: sprint stride is 0.47 s (Minecraft caps the limb speed), bigger and bouncier, leaning forward
 w, cp = gait('Correndo', 'running', 0.47, legs_amp=52, arm_amp=40, twist=9, bob=0.6, roll=2.2, lean=-12,
              arm_fwd=12, arm_out=5, head_fix=10, lift=2.0, tail_x=20)
-install('running', w, cp, antic=0.05, over=0.1)
+install('running', w, cp, antic=0.0, over=0.0)
 # sneak walk: slow stalking steps, paws low and forward (vanilla bends the body forward on top)
 w, cp = gait('Agachado andando', 'sneak_walk', 1.1, legs_amp=22, arm_amp=9, twist=3, bob=0.18, roll=1.0, lean=0,
              arm_fwd=16, arm_out=4, head_fix=9, lift=1.0)
-install('sneak_walk', w, cp)
+install('sneak_walk', w, cp, antic=0.0, over=0.0)
 
 # ================================================================== standing sneak: crouched, alert
 sn = main_of('sneaking')
@@ -230,9 +244,11 @@ crm = main_of('crawling')
 strip(crm, BODY)
 for st in staged_of('crawling').values():
     strip(st, BODY)
+shift(cr, 0.34 * L)                              # starts with the arms passing each other, not at full reach
+shift(crb, 0.34 * L)
 emit(cr)
 emit(crb)
-stage('crawling', crb)
+stage('crawling', crb, 0.0, 0.0)
 
 # ================================================================== swimming: long flutter kicks (arms keep the vanilla stroke)
 sw = main_of('swimming')
@@ -326,6 +342,24 @@ for side, s in (('right', 1), ('left', -1)):
     an = Anim(pa['name'] + ' - braco', 'punch_' + side, 1.0, additive=False, priority=P_PUNCH)
     an.rot(me, lambda t, s=s: (vanilla_swing(t)[0] + 14 * reach_k(t), s * vanilla_swing(t)[1], vanilla_swing(t)[2]))
     emit(an)
+
+# ------------------------------------------------------------------ short entries
+# In CPM the main animations of a pose only start after its entry transition (p:<pose> setup); meanwhile the vanilla
+# swing shows, and every new entry (after each jump, for example) snapped back to the start. The entries of the
+# driven states are now very short, so the cycles start right away.
+def stretch(anim, new_len):
+    f = new_len / anim['length']
+    for a in anim['animators'].values():
+        for k in a['keyframes']:
+            k['time'] = round(k['time'] * f, 4)
+    anim['length'] = new_len
+
+
+for typ, dur in (('walking', 0.1), ('running', 0.1), ('sneak_walk', 0.1), ('jumping', 0.05),
+                 ('crawling', 0.15), ('swimming', 0.15)):
+    st = staged_of(typ)
+    if 'setup' in st:
+        stretch(st['setup'], dur)
 
 # ------------------------------------------------------------------ save
 order = {}
