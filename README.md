@@ -1,5 +1,18 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.43 — transições mais suaves
+
+Arquivo atual: `modelo/variantes/LAST/skin_v16.43_LAST.bbmodel`.
+
+- **Entradas:** voltaram a ser suaves (0,25 s) em cair, voar, voo criativo, dormir, montado, escada, pegando fogo,
+  congelando, comer, escudo e luneta. Correr entra em 0,15 s e pular em 0,05 s, porque com mais tempo a corrida
+  com pulos volta a travar.
+- **Saídas:** continuam com 0,3–0,6 s.
+- **Parado, andar e agachar:** continuam sem transição, porque o CPM reinicia essas poses no jogo.
+- **Aviso — Blockbench:** ao abrir o arquivo, o Blockbench renomeia as saídas repetidas (`p:running` →
+  `p:running2`). Ao exportar, o CPM avisa "animação de estágio desconhecida". Clique em corrigir e escolha a mesma
+  pose; sem isso as saídas não são exportadas e a pose termina de uma vez.
+
 ## L.A.S.T v16.42 — dormir com pernas retas, postura do andar
 
 Arquivo atual: `modelo/variantes/LAST/skin_v16.42_LAST.bbmodel`.

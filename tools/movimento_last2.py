@@ -281,7 +281,7 @@ lively_walk()
 # In game CPM re-enters these poses often; an entry (p:<pose> setup) restarts every time and holds back the pose's
 # own animations, so the "rest" that switches the walking sway off never got to play (chest kept moving after
 # stopping or when crouching). These poses have no entry/exit any more (their animations act at once), and the
-# remaining entries are at most 0.1 s.
+# remaining entries are at most 0.25 s (stable poses: they keep a smooth entry).
 def drop_stage(typ):
     for st in staged_of(typ).values():
         EXISTING.remove(st)
@@ -291,7 +291,7 @@ for typ in ('standing', 'sneaking', 'sneak_walk', 'crawling', 'swimming'):
     drop_stage(typ)
 
 
-def cap_setups(maxd=0.1):
+def cap_setups(maxd=0.25):
     for x in EXISTING:
         if x['name'].startswith('p:') and x['cpm_type'] == 'setup' and x['length'] > maxd:
             f = maxd / x['length']
@@ -429,7 +429,7 @@ def stretch(anim, new_len):
     anim['length'] = new_len
 
 
-for typ, dur in (('running', 0.1), ('jumping', 0.05)):
+for typ, dur in (('running', 0.15), ('jumping', 0.05)):
     st = staged_of(typ)
     if 'setup' in st:
         stretch(st['setup'], dur)
