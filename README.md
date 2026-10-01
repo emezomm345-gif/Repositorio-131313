@@ -1,5 +1,33 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.31 — passos de verdade (andar, correr, agachar, rastejar, nadar, pular)
+
+Arquivo `modelo/variantes/LAST/skin_v16.31_LAST.bbmodel`, gerado por `tools/movimento_last2.py` sobre a v16.30.
+
+Nesses estados, braços e pernas agora são os nossos ciclos, e não mais o balanço do Minecraft. Por cima do balanço
+não dá para sincronizar ombro, peso e passo, porque o CPM não informa a fase do passo. O ritmo é o do próprio
+Minecraft: 0,55 s por passada andando e 0,47 s correndo.
+
+- **Andar / correr:** a perna vai à frente rápida (pé no ar) e empurra devagar (pé no chão). Os braços balançam com
+  atraso. Os ombros giram contra o quadril, o corpo desce a cada pisada, o peso passa para a perna de apoio e a
+  cabeça estabiliza o olhar.
+- **Correr:** inclinado para a frente, passada maior e mais quique. A cauda não sobe mais tanto.
+- **Agachado andando:** passos lentos de quem espreita, patas baixas e à frente.
+- **Agachado parado:** em posição, alerta, ombros respirando, um pé à frente.
+- **Rastejar:** rastejo militar. Um braço de cada vez puxa o corpo, as pernas empurram como sapo, o corpo rola e a
+  cabeça olha adiante.
+- **Nadar:** pernadas longas, uma perna depois da outra; as braçadas continuam as do Minecraft.
+- **Pular:** impulso, as pernas encolhem uma depois da outra e esticam para o chão; os braços sobem e abrem.
+- **Virar:** as pernas giram com o corpo, e a perna do lado para onde você vira dá um passo para fora.
+- **Poses de item recriadas:** como os braços do andar substituem os do Minecraft, estas foram refeitas pelas
+  fórmulas do próprio jogo: escudo, arco, besta (carregando e pronta), luneta, tridente, corneta, pincel, comer e o
+  golpe.
+
+**Limites que o CPM impõe:**
+- A mira do arco, da besta, da luneta e da corneta não acompanha o olhar para cima e para baixo; fica na horizontal.
+- Ao começar ou parar de andar, braços e pernas podem dar um pequeno salto de posição: o CPM não consegue misturar
+  o ciclo próprio com o balanço do Minecraft.
+
 ## L.A.S.T v16.30 — corrida, pulo, natação, voo e virar mais soltos
 
 Arquivo `modelo/variantes/LAST/skin_v16.30_LAST.bbmodel`, gerado por `tools/movimento_last.py` sobre a v16.29. Só o
