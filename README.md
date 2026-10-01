@@ -1,5 +1,27 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.30 — corrida, pulo, natação, voo e virar mais soltos
+
+Arquivo `modelo/variantes/LAST/skin_v16.30_LAST.bbmodel`, gerado por `tools/movimento_last.py` sobre a v16.29. Só o
+L.A.S.T muda; modelo e textura são os mesmos.
+
+- **Correndo:** o corpo inclina bem para a frente (−12°), e essa inclinação "respira". O tronco balança devagar e de
+  forma orgânica, e a cabeça estabiliza o olhar um pouco depois do corpo. Braços soltos e um pouco abertos. Entra e
+  sai com suavidade (passa um pouco do ponto e assenta).
+- **Virando:** quando você vira a câmera, o tronco e os ombros giram junto, na direção para onde você olha, com as
+  pernas plantadas. Olhar para cima ou para baixo inclina o tronco um pouco. A cauda e as orelhas já acompanhavam.
+- **Pulando:** impulso com os braços subindo, as pernas encolhem uma depois da outra, ele estica para o chão e olha
+  para onde vai cair.
+- **Aterrissagem:** o corpo afunda, os braços vão para a frente, ele quica um pouco e assenta.
+- **Pulo correndo:** a inclinação da corrida passa para a do pulo e volta, sem tranco.
+- **Caindo:** braços e pernas se debatem mais devagar e soltos, cada um no seu tempo.
+- **Nadando:** o corpo rola com as braçadas, a cabeça fica estável e as pernas batem uma depois da outra.
+- **Elytra:** braços para trás como asas, com uma vibração lenta; pernas soltas atrás, leve rolagem.
+- **Voo criativo:** pairando, sobe e desce, pernas balançando e braços flutuando, cada um com seu atraso.
+- **Braços e pernas:** o balanço do Minecraft continua por baixo. Ele mantém o passo sincronizado com a velocidade e
+  evita tranco ao começar a correr, pular ou parar.
+- Prévia: `previews/variante_LAST_movimento.gif`. Os braços e pernas da corrida na prévia são simulados.
+
 ## Movimento do corpo (v16.29 / Templário v16.34)
 
 O CPM não usa animações de texture pack (Fresh Animations etc.). Por isso `tools/movimento.py` anima o corpo em todos
