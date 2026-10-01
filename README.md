@@ -1,5 +1,14 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.38 — correções do andar (cabeça travada, parada brusca)
+
+Arquivo atual: `modelo/variantes/LAST/skin_v16.38_LAST.bbmodel`.
+
+- **Cabeça travada depois de andar:** o "Repouso do corpo" também mexia (de forma não aditiva) na cabeça e nos
+  braços. Agora mexe só no corpo; a cabeça e os braços ficam 100% com o Minecraft.
+- **Balanço:** só o corpo balança agora (sobe e desce, rola, gira os ombros), e com amplitude um pouco menor.
+- **Parada brusca:** o CPM não consegue misturar a parada com o balanço. O salto ao parar continua, mas ficou menor.
+
 ## L.A.S.T v16.37 — andar com balanço que funciona no jogo
 
 Arquivo atual: `modelo/variantes/LAST/skin_v16.37_LAST.bbmodel`.

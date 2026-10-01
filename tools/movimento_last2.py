@@ -222,7 +222,7 @@ def lively_walk():
     """Walking, as seen in game: CPM shows the walking pose but keeps restarting its animations (only a fixed pose
     survives), so the moving part can not live there. It runs in a GLOBAL animation instead (its clock never restarts)
     and every other state switches it off with a non-additive "rest" of the same channels (body rotation, positions
-    of body / head / arms; never the arm or head rotations, so the vanilla swing, items and look stay). While walking
+    of the body only; never the head or arms, so the vanilla swing, items and look stay). While walking
     nothing switches it off, so it plays continuously: the body bobs twice per stride, rolls onto the stance side and
     twists the shoulders (shoulders follow), the head rides along. The walking pose keeps the fixed posture."""
     main = main_of('walking')
@@ -249,19 +249,16 @@ def lively_walk():
     def at(t):
         k = round(t, 4)
         if k not in memo:
-            memo[k] = upper_at(-2.2 * bob(t), 7.0 * twist(t), 3.2 * roll(t), drop=(0, -0.9 * bob(t), 0))
+            memo[k] = upper_at(-1.6 * bob(t), 5.5 * twist(t), 2.6 * roll(t), drop=(0, -0.5 * bob(t), 0))
         return memo[k]
+    # only the body: a non-additive "rest" on the head or arms would also lock their vanilla rotation (look, swing)
     g.rot('body', lambda t: tuple(at(t)['body'][0]))
-    for b in ('body', 'right_arm', 'left_arm'):
-        g.pos(b, (lambda b: lambda t: tuple(at(t)[b][1]))(b))
-    g.pos('head', lambda t: add3(at(t)['head'][1], (0.0, -0.25 * bob(t - 0.05), 0.0)))   # head rides a bit later
+    g.pos('body', lambda t: tuple(at(t)['body'][1]))
     emit(g)
     # ---- every other state: back to rest (vanilla values) for exactly those channels
     E = 0.02                                        # CPM drops a channel equal to the default: keep it just off
-    rest = {'body': ((E, 0.0, 0.0), (0.0, E, 0.0)), 'head': (None, (0.0, E, 0.0)),
-            'right_arm': (None, (0.0, E, 0.0)), 'left_arm': (None, (0.0, E, 0.0))}
-    sneak = {'body': ((-28.648, 0.0, 0.0), (0.0, -3.2, 0.0)), 'head': (None, (0.0, -4.2, 0.0)),
-             'right_arm': (None, (0.0, -3.2, 0.0)), 'left_arm': (None, (0.0, -3.2, 0.0))}   # vanilla crouch
+    rest = {'body': ((E, 0.0, 0.0), (0.0, E, 0.0))}
+    sneak = {'body': ((-28.648, 0.0, 0.0), (0.0, -3.2, 0.0))}                          # vanilla crouch
     poses = ['standing', 'running', 'sneaking', 'sneak_walk', 'swimming', 'falling', 'sleeping', 'riding', 'flying',
              'dying', 'creative_flying', 'trident_spin', 'crawling', 'climbing_on_ladder', 'on_ladder', 'jumping']
     customs = [x['name'] for x in EXISTING if x['cpm_type'] == 'custom_pose' and '#' not in x['name']]
