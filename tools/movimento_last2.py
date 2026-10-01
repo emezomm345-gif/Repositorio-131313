@@ -235,8 +235,11 @@ def lively_walk():
     up = upper_at(-5)
     p.rot('body', c(up['body'][0]))
     for b, sgn in (('right_arm', 1), ('left_arm', -1)):
-        p.rot(b, c(add3(up[b][0], (2.0, 0.0, sgn * 7.0))))
-    p.rot('head', c((4.0, 0.0, 0.0)))
+        # arms carried a little forward and loose, hands turned in (a relaxed, purposeful walk, not arms at the sides)
+        p.rot(b, c(add3(up[b][0], (9.0, -sgn * 6.0, sgn * 6.0))))
+    for b, sgn in (('right_leg', 1), ('left_leg', -1)):
+        p.rot(b, c((0.0, sgn * 3.0, sgn * 1.5)))       # feet slightly out, wider stance
+    p.rot('head', c((5.0, 0.0, 0.0)))
     emit(p)
     # ---- the moving layer (global, never restarts)
     L = S * 8
@@ -301,6 +304,18 @@ def cap_setups(maxd=0.1):
 # standing still: no idle sway of the body (after walking it read as the chest still moving)
 strip(main_of('standing'), BODY)
 cap_setups()
+
+# sleeping: legs almost straight (they were bent up too much)
+for x in EXISTING:
+    if x['cpm_type'] == 'sleeping' or x['name'] in ('p:sleeping', 'p:sleeping2'):
+        for b in ('right_leg', 'left_leg'):
+            an = x['animators'].get(UID[b])
+            if an:
+                for k in an['keyframes']:
+                    if k['channel'] == 'rotation':
+                        dp = k['data_points'][0]
+                        dp['x'] = round(float(dp['x']) * 0.18, 3)
+                        dp['z'] = round(float(dp['z']) * 0.5, 3)
 # running: sprint stride is 0.47 s (Minecraft caps the limb speed), bigger and bouncier, leaning forward
 w, cp = gait('Correndo', 'running', 0.47, legs_amp=64, arm_amp=56, twist=13, bob=0.9, roll=3.0, lean=-18,
              arm_fwd=16, arm_out=6, head_fix=15, lift=2.5, tail_x=24)

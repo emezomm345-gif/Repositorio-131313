@@ -1,5 +1,14 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.42 — dormir com pernas retas, postura do andar
+
+Arquivo atual: `modelo/variantes/LAST/skin_v16.42_LAST.bbmodel`.
+
+- **Dormindo:** pernas quase retas, porque antes subiam demais.
+- **Andando:** postura nova, com braços levemente à frente e soltos, mãos viradas para dentro e pés um pouco
+  abertos. O balanço de braços e pernas ao andar continua sendo o do Minecraft: no jogo, o CPM reinicia a pose
+  de andar o tempo todo e só aceita uma postura fixa ali.
+
 ## L.A.S.T v16.41 — andar mais contido, corrida agressiva, cara de dor
 
 Arquivo atual: `modelo/variantes/LAST/skin_v16.41_LAST.bbmodel`.
