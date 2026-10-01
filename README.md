@@ -1,5 +1,21 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.37 — andar com balanço que funciona no jogo
+
+Arquivo atual: `modelo/variantes/LAST/skin_v16.37_LAST.bbmodel`.
+
+O teste da v16.36 mostrou que, no jogo, o CPM mostra a pose de andar mas fica reiniciando as animações dela: só uma
+postura fixa sobrevive. Por isso o movimento do andar mudou de lugar:
+
+- **Balanço:** foi para uma animação global, "Andando - balanco do corpo". O relógio dela nunca reinicia. O corpo
+  sobe e desce duas vezes por passada, o peso rola para o lado da perna de apoio, os ombros giram (os braços
+  acompanham) e a cabeça vem junto com um leve atraso.
+- **Outros estados:** em todos os outros estados (parado, correr, agachar, pular, nadar, emotes…) uma animação
+  "Repouso do corpo" desliga esse balanço. Ela devolve os valores normais só da rotação do corpo e das posições de
+  corpo, cabeça e braços. O balanço dos braços e pernas, os itens e o olhar continuam os do Minecraft. Agachado, ela
+  usa os valores do agachar do próprio Minecraft.
+- **Postura fixa:** na pose de andar ficou a postura fixa (inclinação, braços abertos).
+
 ## L.A.S.T v16.36 — andar: postura fixa visível + teste
 
 Arquivo atual: `modelo/variantes/LAST/skin_v16.36_LAST.bbmodel`.

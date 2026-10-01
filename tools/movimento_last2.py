@@ -219,49 +219,61 @@ def posture(cpm_type, name, lean=0.0, arms=(0.0, 0.0), arm_y=0.0, head=0.0, legs
 # walking: CPM detects walking from the position change between frames and re-enters the pose all the time, so a
 # cycle of our own would keep restarting: walking keeps the vanilla swing (synced, never restarts) + posture
 def lively_walk():
-    """Walking stays on the vanilla swing (it is the only thing that never restarts), and on top of it an additive,
-    restart-safe layer gives it life: the body bobs twice per stride, rolls onto the stance side and twists the
-    shoulders, the arms swing out and back sideways, the head stabilises a moment later. Everything fades in over
-    0.3 s from zero, so if CPM re-enters the walking pose the layer just blends in again instead of snapping; the
-    loop is long (48 strides) and fades through zero at its seam."""
+    """Walking, as seen in game: CPM shows the walking pose but keeps restarting its animations (only a fixed pose
+    survives), so the moving part can not live there. It runs in a GLOBAL animation instead (its clock never restarts)
+    and every other state switches it off with a non-additive "rest" of the same channels (body rotation, positions
+    of body / head / arms; never the arm or head rotations, so the vanilla swing, items and look stay). While walking
+    nothing switches it off, so it plays continuously: the body bobs twice per stride, rolls onto the stance side and
+    twists the shoulders (shoulders follow), the head rides along. The walking pose keeps the fixed posture."""
     main = main_of('walking')
     strip(main, BODY)
-    # no entry/exit stage for walking: in CPM the main animations only start after the entry, and the walking pose
-    # is re-entered often, so the entry kept the layer from ever showing; the layer fades in by itself instead
     for st in staged_of('walking').values():
         EXISTING.remove(st)
-    S = 0.55                                        # Minecraft walking stride (same tempo as the vanilla swing)
-    L = S * 48
-    # a clear static posture (lean, arms open) that shows from the first frame, whatever CPM does with the timing
-    a = Anim('Andando - corpo solto', 'walking', L)
-    amp = lambda t: smooth(t / 0.15) * smooth((L - t) / 0.15)
-    w = lambda per, ph=0.0: (lambda t: math.sin(2 * math.pi * (t / per + ph)))
-    bob = lambda t: amp(t) * 0.5 * (1 - math.cos(4 * math.pi * t / S))          # 0..1, twice per stride
-    roll, twist = w(S, 0.0), w(S, 0.25)
+    S = 0.55                                        # Minecraft walking stride (vanilla swing tempo)
+    # ---- fixed posture in the walking pose (shows from the first frame)
+    p = Anim('Andando - postura', 'walking', 1.0)
+    up = upper_at(-5)
+    p.rot('body', c(up['body'][0]))
+    for b, sgn in (('right_arm', 1), ('left_arm', -1)):
+        p.rot(b, c(add3(up[b][0], (2.0, 0.0, sgn * 7.0))))
+    p.rot('head', c((4.0, 0.0, 0.0)))
+    emit(p)
+    # ---- the moving layer (global, never restarts)
+    L = S * 8
+    g = Anim('Andando - balanco do corpo', 'global', L, priority=-10)
+    bob = lambda t: 0.5 * (1 - math.cos(4 * math.pi * t / S))           # 0..1, twice per stride
+    roll = lambda t: math.sin(2 * math.pi * t / S)
+    twist = lambda t: math.sin(2 * math.pi * (t / S + 0.25))
     memo = {}
 
     def at(t):
         k = round(t, 4)
         if k not in memo:
-            m = amp(t)
-            memo[k] = upper_at(-6 - 1.8 * bob(t), 8.0 * m * twist(t), 3.5 * m * roll(t),
-                               drop=(0, -0.8 * bob(t), 0))
+            memo[k] = upper_at(-2.2 * bob(t), 7.0 * twist(t), 3.2 * roll(t), drop=(0, -0.9 * bob(t), 0))
         return memo[k]
-    for b in ('body', 'right_arm', 'left_arm', 'head'):
-        a.pos(b, (lambda b: lambda t: tuple(at(t)[b][1]))(b))
-    a.rot('body', lambda t: tuple(at(t)['body'][0]))
-    # arms: hang off the body, swing out / in and twist with the shoulders (follow-through: a little later)
-    a.rot('right_arm', lambda t: add3(at(t)['right_arm'][0], (3 * amp(t), -5 * amp(t) * twist(t - 0.06),
-                                                            10 + amp(t) * 6 * w(S, 0.1)(t))))
-    a.rot('left_arm', lambda t: add3(at(t)['left_arm'][0], (3 * amp(t), -5 * amp(t) * twist(t - 0.06),
-                                                           -10 + amp(t) * 6 * w(S, 0.1)(t))))
-    # head: keeps the look steady, cancels most of the twist / roll a little later, nods with the steps
-    a.rot('head', lambda t: (4.5 + amp(t) * 1.6 * bob(t - 0.05), -5.5 * amp(t) * twist(t - 0.05),
-                             -2.5 * amp(t) * roll(t - 0.05)))
-    # legs: hips roll with the weight, legs open a little at each passing
-    a.rot('right_leg', lambda t: (0.0, 0.0, amp(t) * (1.5 + 2.5 * w(S, 0.25)(t))))
-    a.rot('left_leg', lambda t: (0.0, 0.0, -amp(t) * (1.5 - 2.5 * w(S, 0.25)(t))))
-    emit(a)
+    g.rot('body', lambda t: tuple(at(t)['body'][0]))
+    for b in ('body', 'right_arm', 'left_arm'):
+        g.pos(b, (lambda b: lambda t: tuple(at(t)[b][1]))(b))
+    g.pos('head', lambda t: add3(at(t)['head'][1], (0.0, -0.25 * bob(t - 0.05), 0.0)))   # head rides a bit later
+    emit(g)
+    # ---- every other state: back to rest (vanilla values) for exactly those channels
+    E = 0.02                                        # CPM drops a channel equal to the default: keep it just off
+    rest = {'body': ((E, 0.0, 0.0), (0.0, E, 0.0)), 'head': (None, (0.0, E, 0.0)),
+            'right_arm': (None, (0.0, E, 0.0)), 'left_arm': (None, (0.0, E, 0.0))}
+    sneak = {'body': ((-28.648, 0.0, 0.0), (0.0, -3.2, 0.0)), 'head': (None, (0.0, -4.2, 0.0)),
+             'right_arm': (None, (0.0, -3.2, 0.0)), 'left_arm': (None, (0.0, -3.2, 0.0))}   # vanilla crouch
+    poses = ['standing', 'running', 'sneaking', 'sneak_walk', 'swimming', 'falling', 'sleeping', 'riding', 'flying',
+             'dying', 'creative_flying', 'trident_spin', 'crawling', 'climbing_on_ladder', 'on_ladder', 'jumping']
+    customs = [x['name'] for x in EXISTING if x['cpm_type'] == 'custom_pose' and '#' not in x['name']]
+    for typ in poses + customs:
+        vals = sneak if typ in ('sneaking', 'sneak_walk') else rest
+        nm = 'Repouso do corpo' if typ in poses else typ + '#repouso'
+        r = Anim(nm, typ if typ in poses else 'custom_pose', 1.0, additive=False, priority=-9)
+        for b, (rot, pos) in vals.items():
+            if rot is not None:
+                r.rot(b, c(rot))
+            r.pos(b, c(pos))
+        emit(r)
 
 
 lively_walk()
