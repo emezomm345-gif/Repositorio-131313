@@ -1,5 +1,16 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.40 — sem entradas nas poses que o CPM reinicia
+
+Arquivo atual: `modelo/variantes/LAST/skin_v16.40_LAST.bbmodel`.
+
+O CPM entra de novo nas poses com frequência, e cada entrada (`p:<pose>`) recomeça e segura as animações da pose.
+Por isso o "Repouso do corpo" não chegava a tocar, e o peito continuava balançando parado ou agachado.
+
+- Parado, agachado, agachado andando, rastejar e nadar não têm mais entrada nem saída: as animações valem na hora.
+- As outras entradas duram no máximo 0,1 s.
+- O balanço do corpo voltou um pouco mais forte.
+
 ## L.A.S.T v16.39 — parado sem balanço do peito
 
 Arquivo atual: `modelo/variantes/LAST/skin_v16.39_LAST.bbmodel`. Igual à v16.38, mas parado o corpo não balança mais.

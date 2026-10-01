@@ -249,7 +249,7 @@ def lively_walk():
     def at(t):
         k = round(t, 4)
         if k not in memo:
-            memo[k] = upper_at(-1.6 * bob(t), 5.5 * twist(t), 2.6 * roll(t), drop=(0, -0.5 * bob(t), 0))
+            memo[k] = upper_at(-2.0 * bob(t), 7.0 * twist(t), 3.2 * roll(t), drop=(0, -0.6 * bob(t), 0))
         return memo[k]
     # only the body: a non-additive "rest" on the head or arms would also lock their vanilla rotation (look, swing)
     g.rot('body', lambda t: tuple(at(t)['body'][0]))
@@ -275,10 +275,32 @@ def lively_walk():
 
 lively_walk()
 
+# In game CPM re-enters these poses often; an entry (p:<pose> setup) restarts every time and holds back the pose's
+# own animations, so the "rest" that switches the walking sway off never got to play (chest kept moving after
+# stopping or when crouching). These poses have no entry/exit any more (their animations act at once), and the
+# remaining entries are at most 0.1 s.
+def drop_stage(typ):
+    for st in staged_of(typ).values():
+        EXISTING.remove(st)
+
+
+for typ in ('standing', 'sneaking', 'sneak_walk', 'crawling', 'swimming'):
+    drop_stage(typ)
+
+
+def cap_setups(maxd=0.1):
+    for x in EXISTING:
+        if x['name'].startswith('p:') and x['cpm_type'] == 'setup' and x['length'] > maxd:
+            f = maxd / x['length']
+            for an in x['animators'].values():
+                for k in an['keyframes']:
+                    k['time'] = round(k['time'] * f, 4)
+            x['length'] = maxd
+
+
 # standing still: no idle sway of the body (after walking it read as the chest still moving)
 strip(main_of('standing'), BODY)
-for st in staged_of('standing').values():
-    strip(st, BODY)
+cap_setups()
 # running: sprint stride is 0.47 s (Minecraft caps the limb speed), bigger and bouncier, leaning forward
 w, cp = gait('Correndo', 'running', 0.47, legs_amp=52, arm_amp=40, twist=9, bob=0.6, roll=2.2, lean=-12,
              arm_fwd=12, arm_out=5, head_fix=10, lift=2.0, tail_x=20)
