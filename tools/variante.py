@@ -24,6 +24,9 @@ usage: python3 tools/variante.py <base.bbmodel> <skin64.png> <out.bbmodel> [--hi
 - --acessorios <name>: 3D accessories built for a variant (see ACESSORIOS), textured in the new atlas space.
 - --pelo <part.face[:rows],...>: in those rows of the skin, the accessory green (a bandana not used by the
   variant) shows the character's own fur (recoloured) instead.
+- --brow <palette>: colour of the brow band (palpebra_R/L) to match the variant's fur.
+- --emotes <names>: keep only these emotes / settings (and their transitions); --remove-props <prefixes>:
+  drop emote props (e.g. holo,bracelete) that no kept emote uses.
 - --lambda: the orange mark on the chest becomes a crisp orange lambda symbol.
 - Tufts covered by the clothes (--hide: group or element names) are pointed at a transparent texel: the geometry stays, they just
   don't show.
@@ -130,6 +133,9 @@ FUR_PALETTES = {   # brightness of the DARK base fur -> colour (light fur is nev
     'verde': [(0, (0, 26, 12)), (18, (0, 52, 24)), (30, (0, 68, 29)), (50, (0, 84, 27)), (80, (0, 98, 24)),
               (255, (0, 98, 24))],
 }
+BROW_PALETTES = {  # brightness of the grey brow band -> colour (darker than the fur so it still reads as a brow)
+    'verde': [(0, (0, 14, 6)), (40, (0, 22, 9)), (60, (0, 34, 14)), (97, (24, 118, 52)), (255, (60, 160, 80))],
+}
 LIGHT_FUR = (70, 130)   # brightness where the recolour fades out: from here up the white/grey fur stays as it is
 NO_RECOLOUR = ('eye_R_iris', 'eye_L_iris', 'nose', 'palpebra_R', 'palpebra_L', 'hat', 'jacket', 'sleeve', 'Pant',
                'body', 'right_arm', 'left_arm', 'right_leg', 'left_leg')
@@ -173,6 +179,9 @@ def main():
     fur = sys.argv[sys.argv.index('--fur') + 1] if '--fur' in sys.argv else None
     head_top = int(sys.argv[sys.argv.index('--head-top') + 1]) if '--head-top' in sys.argv else 0
     acess = sys.argv[sys.argv.index('--acessorios') + 1] if '--acessorios' in sys.argv else None
+    brow = sys.argv[sys.argv.index('--brow') + 1] if '--brow' in sys.argv else None
+    keep_emotes = sys.argv[sys.argv.index('--emotes') + 1].split(',') if '--emotes' in sys.argv else None
+    drop_props = sys.argv[sys.argv.index('--remove-props') + 1].split(',') if '--remove-props' in sys.argv else []
     pelo = {}                    # --pelo body.north:0-4,body.up  -> (part, face): (row0, row1) in skin pixels
     if '--pelo' in sys.argv:
         for it in sys.argv[sys.argv.index('--pelo') + 1].split(','):
@@ -185,6 +194,22 @@ def main():
     tex = Image.open(io.BytesIO(base64.b64decode(d['textures'][0]['source'].split(',', 1)[1]))).convert('RGBA')
     T = np.zeros((256, 256, 4), np.uint8)
     T[:128, :128] = np.array(tex)                       # old atlas: same pixels, same UVs
+    if brow:                                            # brow band colour (texels used only by the band)
+        own = np.zeros(T.shape[:2], bool); other = np.zeros(T.shape[:2], bool)
+        for e in d['elements']:
+            for fc in e['faces'].values():
+                if fc.get('texture') is None: continue
+                u0, v0, u1, v1 = fc['uv']
+                sl = (slice(int(min(v0, v1)), int(np.ceil(max(v0, v1)))), slice(int(min(u0, u1)), int(np.ceil(max(u0, u1)))))
+                (own if e['name'] in ('palpebra_R', 'palpebra_L') else other)[sl] = True
+        m = own & ~other & (T[..., 3] > 0)
+        c = T[..., :3].astype(int)
+        L = 0.299 * c[..., 0] + 0.587 * c[..., 1] + 0.114 * c[..., 2]
+        st = BROW_PALETTES[brow]
+        for ch in range(3):
+            T[..., ch] = np.where(m, np.interp(L, [p_ for p_, _ in st], [col[ch] for _, col in st]).round(),
+                                  T[..., ch]).astype(np.uint8)
+        print('brow texels recoloured:', int(m.sum()))
     T_fur = T.copy()                                    # the character's own (recoloured) fur, for --pelo
     if fur:
         print('fur texels recoloured:', recolour_fur(T, d, FUR_PALETTES[fur]))
@@ -368,6 +393,41 @@ def main():
                     if fc.get('texture') is not None:
                         fc['uv'] = [int(tx), int(ty), int(tx) + 1, int(ty) + 1]
         print('hidden elements:', len(members), 'texel', (int(tx), int(ty)))
+
+    # --emotes: keep only these emotes/settings (custom poses, gestures, layers) and their transitions
+    if keep_emotes is not None:
+        EMOTE_TYPES = ('custom_pose', 'gesture', 'layer')
+        gone = {a['name'] for a in d['animations'] if a['cpm_type'] in EMOTE_TYPES and a['name'] not in keep_emotes}
+        d['animations'] = [a for a in d['animations'] if not (
+            a['name'] in gone or (a['cpm_type'] in ('setup', 'finish') and a['name'][2:] in gone
+                                  and a['name'][:2] in ('c:', 'g:')))]
+        print('emotes removed:', sorted(gone))
+    # --remove-props: emote props no longer used (groups by name prefix, with their elements)
+    if drop_props:
+        gid = {g['uuid'] for g in d['groups'] if g['name'].startswith(tuple(drop_props))}
+        eid = set()
+
+        def prune(nodes, inside):
+            out = []
+            for n in nodes:
+                if isinstance(n, dict):
+                    hit = inside or n['uuid'] in gid
+                    kids = prune(n['children'], hit)
+                    if not hit:
+                        n['children'] = kids
+                        out.append(n)
+                elif inside:
+                    eid.add(n)
+                else:
+                    out.append(n)
+            return out
+        d['outliner'] = prune(d['outliner'], False)
+        d['groups'] = [g for g in d['groups'] if g['uuid'] not in gid]
+        d['elements'] = [e for e in d['elements'] if e['uuid'] not in eid]
+        for a in d['animations']:
+            for k in [k for k in a['animators'] if k in gid]:
+                del a['animators'][k]
+        print('props removed:', len(gid), 'groups,', len(eid), 'elements')
 
     d['resolution'] = {'width': 256, 'height': 256}
     for k in ('width', 'height', 'uv_width', 'uv_height'):

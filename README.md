@@ -21,6 +21,9 @@ aplica qualquer um na hora.
   - `--head-top <linhas>`: acessórios de cabeça (gorro, óculos, faixas) vão na casca do chapéu (0,25 em volta da
     cabeça, que fica visível só nessas variantes): as primeiras <linhas> da cabeça da skin + a camada de chapéu
     da skin. O rosto embaixo não muda.
+  - `--brow <paleta>`: cor da sobrancelha (faixa) combinando com o pelo da variante.
+  - `--emotes <nomes>`: mantém só esses emotes/configurações (e suas transições); `--remove-props <prefixos>`
+    tira os objetos dos emotes retirados (ex.: `holo,bracelete`).
   - `--hide`: grupos ou peças de tufo cobertos pela roupa/acessório (apontados para um texel transparente).
   - `--pelo parte.face[:linhas],...`: onde a skin pintou um acessório verde que a variante não usa (bandana),
     mostra o pelo do próprio Emezomm (já com a cor da variante).
@@ -40,9 +43,12 @@ aplica qualquer um na hora.
   triângulo no peito em degraus — camada de trás verde-clara (borda saltada) e camada da frente estampada,
   recuada — com um losango em relevo no centro. Presa ao corpo. Colete de couro com o peito do próprio Emezomm
   no decote (`--pelo`), mangas cinza, luvas pretas, cinto verde com fivela, calça marrom e botas, com a segunda
-  camada.
+  camada. **Sobrancelha verde** (faixa verde-escura com contorno verde vivo, combinando com o pelo).
+  **Emotes desta variante:** só as expressões (Raiva, Super serio, WTF, Tranquilidade), Alongamento e Estalar o
+  pescoco, mais as configurações (Esconder orelhas, Esconder cauda, Ignorar capacete); os outros emotes e os
+  objetos tecnológicos deles (hologramas, bracelete) foram retirados.
   Tufos do peito escondidos pelo colete. Prévia: `previews/variante_CACADORES.png`.
-  Comando: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/CACADORES/skin_CACADORES_64x64_original.png modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel --fur verde --acessorios cacadores --hide fur_chest --pelo body.north:0-4,body.south:0-1,body.up`
+  Comando: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/CACADORES/skin_CACADORES_64x64_original.png modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel --fur verde --brow verde --acessorios cacadores --hide fur_chest --pelo body.north:0-4,body.south:0-1,body.up --emotes "Raiva,Super serio,WTF,Tranquilidade,Alongamento,Estalar o pescoco,Esconder orelhas,Esconder cauda,Ignorar capacete" --remove-props holo,bracelete`
 
 ## Versão atual: v16.28 (WTF refeito)
 
