@@ -32,6 +32,9 @@ usage: python3 tools/variante.py <base.bbmodel> <skin64.png> <out.bbmodel> [--hi
 - --smooth: 2nd-layer bits smaller than 4 px are painted on the base only (no floating blocks), the base under
   the 2nd layer matches it, and close colours get soft dithered transitions.
 - --keep-tex <file.bbmodel>:elem.face,...: keeps the player's own painting on those faces.
+- --head-paint <r0-r1>: paints the skin's head rows r0..r1 (hood, collar...) on the model's head -- only the cloth
+  / gold pixels, never the fur or the face features -- and puts the same rows of the skin's hat layer on the hat
+  shell as relief.
 - --lambda: the orange mark on the chest becomes a crisp orange lambda symbol.
 - Tufts covered by the clothes (--hide: group or element names) are pointed at a transparent texel: the geometry stays, they just
   don't show.
@@ -233,7 +236,8 @@ def main():
     head_top = int(sys.argv[sys.argv.index('--head-top') + 1]) if '--head-top' in sys.argv else 0
     acess = sys.argv[sys.argv.index('--acessorios') + 1] if '--acessorios' in sys.argv else None
     slim = '--slim' in sys.argv
-    smooth = '--smooth' in sys.argv                      # small loose 2nd-layer bits go to the base + soft transitions
+    smooth = '--smooth' in sys.argv
+    head_rows = tuple(int(v) for v in sys.argv[sys.argv.index('--head-paint') + 1].split('-')) if '--head-paint' in sys.argv else None                      # small loose 2nd-layer bits go to the base + soft transitions
     keep_tex = sys.argv[sys.argv.index('--keep-tex') + 1] if '--keep-tex' in sys.argv else None
     ear_blend = '--ear-blend' in sys.argv
     brow = sys.argv[sys.argv.index('--brow') + 1] if '--brow' in sys.argv else None
@@ -335,6 +339,29 @@ def main():
         if v0 > v1: big = big[::-1]
         T[y0:y1, x0:x1] = big
 
+    if head_rows:
+        r0, r1 = head_rows
+        hf = next(e for e in d['elements'] if e['name'] == 'head')['faces']
+        warm = lambda c: (int(c[:3].max()) - int(c[:3].min())) > 14 and c[3] > 0     # cloth/gold, not the grey fur
+        for face, (x, y, fw, fh) in box_faces(0, 0, 8, 8, 8).items():
+            base = sk[y:y + fh, x:x + fw].copy()
+            over = sk[box_faces(32, 0, 8, 8, 8)[face][1]:box_faces(32, 0, 8, 8, 8)[face][1] + fh,
+                      box_faces(32, 0, 8, 8, 8)[face][0]:box_faces(32, 0, 8, 8, 8)[face][0] + fw]
+            img = Image.fromarray(base); img.alpha_composite(Image.fromarray(over.copy())); src = np.array(img)
+            if face in ('up',):
+                continue
+            rows_ok = range(0, fh) if face == 'down' else range(r0, r1 + 1)
+            u0, v0, u1, v1 = hf[face]['uv']
+            for yy in rows_ok:
+                for xx in range(fw):
+                    c = src[yy, xx]
+                    if not warm(c): continue
+                    py, px = yy, xx
+                    for dy in (0, 1):
+                        for dx in (0, 1):
+                            col = c[:3].astype(float) * (1.03 if (dy == 0 and dx == 0) else 0.985)
+                            T[int(min(v0, v1)) + 2 * py + dy, int(min(u0, u1)) + 2 * px + dx, :3] = np.clip(col, 0, 255)
+        print('head painted: rows', head_rows)
     # --- base layer (opaque)
     for part, ((bx, by), (ox, oy), (w, h, dd)) in limbs.items():
         for face, (x, y, fw, fh) in box_faces(bx, by, w, h, dd).items():
@@ -402,11 +429,14 @@ def main():
             write(fc, big)
     # head accessories on the hat shell: top rows of the skin's head + the skin's hat layer (face untouched)
     hat = next(e for e in d['elements'] if e['name'] == 'hat')
-    hat['visibility'] = bool(head_top)              # hidden in the base model; shown when it carries accessories
+    hat['visibility'] = bool(head_top or head_rows)  # hidden in the base model; shown when it carries something
     for face, (x, y, fw, fh) in box_faces(0, 0, 8, 8, 8).items():
         fc = hat['faces'][face]
         xo, yo = box_faces(32, 0, 8, 8, 8)[face][:2]
         a = np.zeros((fh, fw, 4), np.uint8)
+        if head_rows and face not in ('up', 'down'):
+            a = sk[yo:yo + fh, xo:xo + fw].copy()
+            a[:head_rows[0]] = 0; a[head_rows[1] + 1:] = 0
         if head_top:
             b = sk[y:y + fh, x:x + fw].copy()
             if face in ('north', 'south', 'east', 'west'):
@@ -416,7 +446,7 @@ def main():
             a = b
         over = Image.fromarray(a); over.alpha_composite(Image.fromarray(sk[yo:yo + fh, xo:xo + fw].copy()))
         a = np.array(over)
-        if not head_top or not (a[..., 3] > 0).any():
+        if not (head_top or head_rows) or not (a[..., 3] > 0).any():
             fc['uv'], fc['texture'] = [0, 0, 0, 0], None
             continue
         big = upscale(a, 'head', face, 'hat')
