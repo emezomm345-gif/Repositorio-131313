@@ -1,5 +1,20 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.35 — andar: correção para aparecer no jogo
+
+Arquivo atual: `modelo/variantes/LAST/skin_v16.35_LAST.bbmodel`.
+
+Na v16.34 a camada "corpo solto" do andar não aparecia no jogo. No CPM as animações principais de uma pose só
+começam depois da transição de entrada (`p:walking`), e o CPM entra de novo na pose de andar com frequência. Com isso a
+entrada recomeçava e a camada nunca chegava a tocar.
+
+O que mudou:
+- O andar não tem mais transição de entrada nem de saída. A própria camada começa do zero e aparece em 0,15 s.
+- O movimento ficou mais forte:
+  - o corpo desce 0,8 px a cada passo;
+  - rolagem de 3,5° e giro de ombros de 8°;
+  - os braços abrem 5° ± 6°.
+
 ## L.A.S.T v16.34 — andar mais solto
 
 Arquivo atual: `modelo/variantes/LAST/skin_v16.34_LAST.bbmodel`, gerado por `tools/movimento_last2.py`. É igual à

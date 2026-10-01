@@ -226,12 +226,14 @@ def lively_walk():
     loop is long (48 strides) and fades through zero at its seam."""
     main = main_of('walking')
     strip(main, BODY)
+    # no entry/exit stage for walking: in CPM the main animations only start after the entry, and the walking pose
+    # is re-entered often, so the entry kept the layer from ever showing; the layer fades in by itself instead
     for st in staged_of('walking').values():
-        strip(st, BODY)
+        EXISTING.remove(st)
     S = 0.55                                        # Minecraft walking stride (same tempo as the vanilla swing)
     L = S * 48
     a = Anim('Andando - corpo solto', 'walking', L)
-    amp = lambda t: smooth(t / 0.3) * smooth((L - t) / 0.3)
+    amp = lambda t: smooth(t / 0.15) * smooth((L - t) / 0.15)
     w = lambda per, ph=0.0: (lambda t: math.sin(2 * math.pi * (t / per + ph)))
     bob = lambda t: amp(t) * 0.5 * (1 - math.cos(4 * math.pi * t / S))          # 0..1, twice per stride
     roll, twist = w(S, 0.0), w(S, 0.25)
@@ -241,23 +243,23 @@ def lively_walk():
         k = round(t, 4)
         if k not in memo:
             m = amp(t)
-            memo[k] = upper_at(-3 * smooth(t / 0.3) - 1.2 * bob(t), 5.0 * m * twist(t), 2.4 * m * roll(t),
-                               drop=(0, -0.45 * bob(t), 0))
+            memo[k] = upper_at(-4 * smooth(t / 0.15) - 1.8 * bob(t), 8.0 * m * twist(t), 3.5 * m * roll(t),
+                               drop=(0, -0.8 * bob(t), 0))
         return memo[k]
     for b in ('body', 'right_arm', 'left_arm', 'head'):
         a.pos(b, (lambda b: lambda t: tuple(at(t)[b][1]))(b))
     a.rot('body', lambda t: tuple(at(t)['body'][0]))
     # arms: hang off the body, swing out / in and twist with the shoulders (follow-through: a little later)
-    a.rot('right_arm', lambda t: add3(at(t)['right_arm'][0], (2 * amp(t), -3 * amp(t) * twist(t - 0.06),
-                                                            amp(t) * (4 + 3.5 * w(S, 0.1)(t)))))
-    a.rot('left_arm', lambda t: add3(at(t)['left_arm'][0], (2 * amp(t), -3 * amp(t) * twist(t - 0.06),
-                                                           -amp(t) * (4 - 3.5 * w(S, 0.1)(t)))))
+    a.rot('right_arm', lambda t: add3(at(t)['right_arm'][0], (3 * amp(t), -5 * amp(t) * twist(t - 0.06),
+                                                            amp(t) * (5 + 6 * w(S, 0.1)(t)))))
+    a.rot('left_arm', lambda t: add3(at(t)['left_arm'][0], (3 * amp(t), -5 * amp(t) * twist(t - 0.06),
+                                                           -amp(t) * (5 - 6 * w(S, 0.1)(t)))))
     # head: keeps the look steady, cancels most of the twist / roll a little later, nods with the steps
-    a.rot('head', lambda t: (amp(t) * (2.5 + 1.6 * bob(t - 0.05)), -3.5 * amp(t) * twist(t - 0.05),
-                             -1.7 * amp(t) * roll(t - 0.05)))
+    a.rot('head', lambda t: (amp(t) * (2.5 + 1.6 * bob(t - 0.05)), -5.5 * amp(t) * twist(t - 0.05),
+                             -2.5 * amp(t) * roll(t - 0.05)))
     # legs: hips roll with the weight, legs open a little at each passing
-    a.rot('right_leg', lambda t: (0.0, 0.0, amp(t) * (1.5 + 1.5 * w(S, 0.25)(t))))
-    a.rot('left_leg', lambda t: (0.0, 0.0, -amp(t) * (1.5 - 1.5 * w(S, 0.25)(t))))
+    a.rot('right_leg', lambda t: (0.0, 0.0, amp(t) * (1.5 + 2.5 * w(S, 0.25)(t))))
+    a.rot('left_leg', lambda t: (0.0, 0.0, -amp(t) * (1.5 - 2.5 * w(S, 0.25)(t))))
     emit(a)
 
 
