@@ -198,90 +198,6 @@ def bandana_pescoco():
 
 # ------------------------------------------------------------------ emote props (bounty hunters)
 # All of them rest INSIDE an arm or the body (invisible) and are pulled out by the emotes. 4 px per unit.
-PAPER = [(232, 214, 160), (218, 196, 138), (198, 172, 112), (170, 140, 86)]
-INK, SEAL = (74, 46, 24), (168, 38, 28)
-
-
-def contract_front():
-    """15 x 24 px: aged, torn bounty contract -- header, portrait of the target, reward, text, red seal."""
-    rng = np.random.default_rng(7)
-    W, H = 15, 24
-    a = np.zeros((H, W, 4), np.uint8)
-    for y in range(H):
-        for x in range(W):
-            c = PAPER[0] if rng.random() > 0.22 else PAPER[1]
-            if x in (0, W - 1) or y in (0, H - 1):
-                c = PAPER[2]
-            a[y, x] = (*c, 255)
-    for (cy, cx) in ((5, 12), (17, 2), (20, 10)):                 # stains
-        for dy in (-1, 0, 1):
-            for dx in (-1, 0, 1):
-                if abs(dy) + abs(dx) < 2: a[cy + dy, cx + dx] = (*PAPER[2], 255)
-    hdr = "#.#.##.#.#.##."                                            # header "PROCURADO"
-    for i, ch in enumerate(hdr):
-        if ch == '#': a[2, 1 + i] = (*INK, 255)
-        if i % 2 == 0 and ch == '#': a[3, 1 + i] = (*INK, 255)
-    a[4, 2:13] = (*PAPER[3], 255)
-    for y in range(6, 16):                                            # portrait frame
-        a[y, 3] = a[y, 11] = (*PAPER[3], 255)
-    a[6, 3:12] = a[15, 3:12] = (*PAPER[3], 255)
-    sil = [".#.....#.",
-           ".##...##.",
-           ".#######.",
-           "##.###.##",
-           ".#######.",
-           "..#####..",
-           "...###...",
-           ".#######."]
-    for j, row in enumerate(sil):
-        for i, ch in enumerate(row):
-            if ch == '#': a[7 + j, 3 + i] = (*INK, 255)
-    for x in (4, 5, 7, 8, 9, 10):                                     # reward "$ 5000"
-        a[17, x] = (*INK, 255)
-    a[18, 4] = (*INK, 255)
-    for y in (19, 20):
-        for x in range(2, 13):
-            if (x + 2 * y) % 5: a[y, x] = (*PAPER[3], 255)
-    for y, x in ((21, 10), (21, 11), (21, 12), (22, 10), (22, 11), (22, 12), (20, 11)):   # seal
-        a[y, x] = (*SEAL, 255)
-    a[22, 2:7] = (*INK, 255)                                          # signature line
-    for y, x in ((0, 3), (0, 4), (0, 9), (0, 10), (0, 11), (1, 10), (9, 14), (10, 14), (11, 14), (23, 0),
-                 (23, 1), (22, 0), (23, 2), (23, 8), (23, 9), (14, 0)):                 # torn bits
-        a[y, x] = (0, 0, 0, 0)
-    return a
-
-
-def contract_back(front):
-    a = front[:, ::-1].copy()
-    m = a[..., 3] > 0
-    rng = np.random.default_rng(3)
-    for y in range(a.shape[0]):
-        for x in range(a.shape[1]):
-            if m[y, x]:
-                c = PAPER[1] if rng.random() > 0.3 else PAPER[2]
-                if x in (0, a.shape[1] - 1) or y in (0, a.shape[0] - 1) or y == 12: c = PAPER[2]   # fold line
-                a[y, x] = (*c, 255)
-    return a
-
-
-def roll_parts():
-    """the rolled-up bottom of the contract (follows the bottom edge while it unrolls)"""
-    R = {'1': PAPER[0], '2': PAPER[1], '3': PAPER[2], '4': PAPER[3], 'i': INK}
-    side = grid(["1" * 15, "3" * 15], R)
-    end = grid(["34", "43"], R)
-    return [('contrato_rolo', (-7.875, 13.5, -0.25), (-4.125, 14.0, 0.25),
-             {'north': side, 'south': side, 'up': grid(["2" * 15, "1" * 15], R), 'down': grid(["3" * 15] * 2, R),
-              'east': end, 'west': end}, {'density': 4})]
-
-
-def charcoal_parts():
-    CH = {'k': (34, 30, 28), 'K': (58, 52, 48), 'p': (196, 170, 120)}
-    side = grid(["k", "K", "p", "p", "p", "p", "p", "p"], CH)
-    return [('carvao', (6.625, 13.5, -0.125), (6.875, 15.5, 0.125),
-             {'north': side, 'south': side, 'east': side, 'west': side, 'up': grid(["k"], CH),
-              'down': grid(["p"], CH)}, {'density': 4})]
-
-
 def coin_parts():
     """solid gold coin, 1.25 across: rim, field and a stamped emblem; round look (cut corners)"""
     CO = {'1': (255, 232, 140), '2': (236, 190, 72), '3': (196, 142, 40), '4': (150, 104, 26), '5': (110, 74, 16)}
@@ -296,14 +212,8 @@ def coin_parts():
               'up': grid(["32123"], CO), 'down': grid(["44544"], CO)}, {'density': 4})]
 
 
-def stroke_parts():
-    INKS = {'r': (60, 40, 30), 'R': (34, 26, 22)}
-    return [('contrato_risco_traco', (-7.0, 18.275, 0.0), (-4.25, 18.525, 0.0),
-             {'north': grid(["rRRrRRrRRrR"], INKS)}, {'density': 4})]
-
-
 def goggles(lens_front, lens_side, lens_top, lens_bot):
-    """goggles on the forehead, tilted like the player's edit; plain glass (nothing glowing)"""
+    """goggles on the forehead, tilted like the player's edit; plain glass, strap around the head"""
     return [('head', 'acess_oculos', (0, 31.1, -4.5), [
             ('oculos_lente_R', (1.25, 30.1, -4.75), (3.75, 32.1, -4.25),
              {'north': lens_front, 'east': lens_side, 'west': lens_side, 'up': lens_top, 'down': lens_bot}),
@@ -312,34 +222,56 @@ def goggles(lens_front, lens_side, lens_top, lens_bot):
               'down': lens_bot}),
             ('oculos_ponte', (-1.25, 30.85, -4.75), (1.25, 31.35, -4.25),
              {'north': rows(5, [BRONZE['2']]), 'up': rows(5, [BRONZE['3']]), 'down': rows(5, [BRONZE['1']])}),
-         ], {'rotation': [25, 0, 0]}),
-         # strap in its own group (pivot at the front) so it can be tightened when the goggles go down
-         ('acess_oculos', 'oculos_alca_g', (0, 31.1, -4.25), [
             ('oculos_alca', (-4.25, 30.6, -4.25), (4.25, 31.6, 5.25),
              {'north': strap(17, 2), 'south': strap(17, 2), 'east': strap(19, 2, buckle=True),
-              'west': strap(19, 2), 'down': rows(17, [STRAP[2]] * 19)})])]
+              'west': strap(19, 2), 'down': rows(17, [STRAP[2]] * 19)}),
+         ], {'rotation': [25, 0, 0]})]
 
 
 def cacadores():
     """Bounty hunters: goggles on the forehead (the player's tilted style), the neck bandana like the reference
-    (tip in its own group so it can swing) and the props of the emotes (contract + roll, charcoal, coin)."""
+    (tip in its own group so it can swing) and the coin of the coin-toss emote."""
     lens_front = grid(["33332",
                        "3HOO2",
                        "2OOD1",
                        "21111"], {**BRONZE, **LENS})
     lens_side = rows(1, [BRONZE['3'], BRONZE['2'], BRONZE['2'], BRONZE['1']])
     lens_top, lens_bot = rows(5, [BRONZE['3']]), rows(5, [BRONZE['1']])
-    front = contract_front()
     return goggles(lens_front, lens_side, lens_top, lens_bot) + bandana_pescoco() + [
-        ('right_arm', 'prop_carvao', (6.75, 14.5, 0.0), charcoal_parts()),
         ('right_arm', 'prop_moeda', (5.625, 20.625, 0.0), coin_parts()),
-        # contract 3.75 x 6 (shown 1.3x bigger by the emotes); pivot = top edge, so it unrolls downwards
-        ('left_arm', 'prop_contrato', (-6.0, 20.0, 0.0), [
-            ('contrato_papel', (-7.875, 14.0, -0.05), (-4.125, 20.0, 0.05),
-             {'north': front, 'south': contract_back(front)}, {'density': 4})]),
-        ('prop_contrato', 'contrato_risco', (-7.0, 18.4, 0.0), stroke_parts(), {'rotation': [0, 0, -42]}),
-        ('left_arm', 'prop_rolo', (-6.0, 13.75, 0.0), roll_parts()),
     ]
 
 
-ACESSORIOS = {'cacadores': cacadores}
+# ------------------------------------------------------------------ white variant (templar-like outfit)
+CREAM = [(247, 241, 236), (236, 222, 212), (215, 199, 187), (189, 178, 168)]
+GOLDW = [(230, 187, 119), (204, 165, 104), (170, 132, 80)]
+
+
+def collar(w, h, seed=0):
+    """cream collar with a gold trim on top and bottom (the gold/cream band of the skin's hat layer)"""
+    a = np.zeros((h, w, 4), np.uint8)
+    for y in range(h):
+        for x in range(w):
+            c = CREAM[0] if (x + y + seed) % 4 else CREAM[1]
+            a[y, x] = (*c, 255)
+    a[0] = (*GOLDW[0], 255)
+    a[0, ::4] = (*GOLDW[1], 255)
+    a[-1] = (*GOLDW[1], 255)
+    if h > 3:
+        a[-2] = (*CREAM[2], 255)
+    return a
+
+
+def branca():
+    """3D collar around the neck (cream with gold trims), like the band on the skin's hat layer"""
+    return [('body', 'acess_gola', (0, 23.25, 0), [
+        ('gola', (-4.25, 22.25, -2.25), (4.25, 24.25, 2.25),
+         {'north': collar(17, 4, 0), 'south': collar(17, 4, 1), 'east': collar(9, 4, 2), 'west': collar(9, 4, 3),
+          'up': rows(17, [CREAM[1]] * 9), 'down': rows(17, [CREAM[3]] * 9)}),
+        ('gola_fecho', (-0.5, 22.75, -2.75), (0.5, 23.75, -2.25),
+         {'north': grid(["12", "23"], {'1': GOLDW[0], '2': GOLDW[1], '3': GOLDW[2]}),
+          'east': rows(1, [GOLDW[0], GOLDW[2]]), 'west': rows(1, [GOLDW[0], GOLDW[2]]),
+          'up': rows(2, [GOLDW[0]]), 'down': rows(2, [GOLDW[2]])})])]
+
+
+ACESSORIOS = {'cacadores': cacadores, 'branca': branca}

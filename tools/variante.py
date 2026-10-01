@@ -132,6 +132,8 @@ def draw_lambda(face, x0=5, y0=1):
 FUR_PALETTES = {   # brightness of the DARK base fur -> colour (light fur is never recoloured, see below)
     'verde': [(0, (0, 26, 12)), (18, (0, 52, 24)), (30, (0, 68, 29)), (50, (0, 84, 27)), (80, (0, 98, 24)),
               (255, (0, 98, 24))],
+    'branco': [(0, (176, 176, 176)), (12, (198, 198, 198)), (25, (220, 220, 220)), (40, (232, 232, 232)),
+               (60, (240, 240, 240)), (80, (244, 244, 244)), (255, (244, 244, 244))],
 }
 BROW_PALETTES = {  # brightness of the grey brow band -> colour (darker than the fur so it still reads as a brow)
     'verde': [(0, (0, 14, 6)), (40, (0, 22, 9)), (60, (0, 34, 14)), (97, (24, 118, 52)), (255, (60, 160, 80))],

@@ -40,32 +40,31 @@ aplica qualquer um na hora.
   branco continua branco), sobrancelha verde, colete de couro com o peito do Emezomm no decote, mangas cinza,
   luvas, cinto e botas, com a segunda camada. Prévias: `previews/variante_CACADORES.png` e
   `previews/variante_CACADORES_emotes.gif`.
-  - **Óculos** no estilo do ajuste enviado (inclinados 25° no alto da testa, alça descendo até a nuca). A alça
-    tem grupo próprio para apertar quando os óculos descem.
+  - **Óculos** no estilo do ajuste enviado (inclinados 25° no alto da testa, alça descendo até a nuca).
   - **Bandana no pescoço** como a referência: faixa com losangos e o **triângulo liso** com borda escura,
     contorno claro por dentro e losangos, mais o losango em relevo no centro. A ponta fica num grupo próprio.
   - **Acessórios animados**: a ponta da bandana balança parada, sacode andando, esvoaça correndo/pulando/caindo;
     os óculos quicam com os passos e levantam nos pulos e quedas.
-  - **Configuração "Oculos nos olhos"** (camada): ao ligar, as duas mãos sobem e **puxam os óculos para baixo**
-    até os olhos (a alça aperta); ao desligar, empurram de volta para a testa. Vidro comum — nada brilha.
-  - **Emotes de caçador** (objetos saem da manga e voltam; ficam escondidos dentro dos braços):
-    **Reconhecer o alvo** (tira o contrato enrolado e o **abre na vertical com as duas mãos** — a esquerda segura
-    em cima e a direita puxa o rolinho para baixo — olhando para o alvo; lê, compara olhando à frente, inclina a
-    cabeça e confirma com um aceno curto e **cara séria**; enrola de volta), **Finalizando contrato** (abre do mesmo
-    jeito, pega o carvão, risca o alvo e mostra o contrato erguido com **raiva de vitória — "conseguimos, porra!"**:
-    soco no ar, aceno forte, sobrancelhas franzidas, orelhas coladas, focinho franzindo, pelo da cabeça eriçado e
-    cauda chicoteando; enrola e guarda), **Jogar moeda** (loop até se mover: moeda de ouro maciça e detalhada,
-    preparação, peteleco, sobe bem alto girando e balançando, a cabeça e as orelhas acompanham, a mão sobe para
-    pegar e dá o tranco), **Saudacao do velho oeste** (mão na aba/têmpora, inclina a cabeça para a frente com
-    **expressão bem séria** e despede com a mão).
-  - O contrato é maior (3,75 × 6, mostrado 1,3× maior), amarelado, rasgado, com cartaz, retrato, recompensa,
-    texto e selo vermelho.
+  - **Emote Jogar moeda** (loop até se mover; a moeda fica escondida dentro do braço direito): moeda de ouro maciça
+    e detalhada, preparação, peteleco, sobe bem alto girando e balançando, a cabeça e as orelhas acompanham, a mão
+    sobe para pegar e dá o tranco.
   - Também ficam: expressões (Raiva, Super serio, WTF, Tranquilidade), Alongamento, Estalar o pescoco e as
     configurações de orelha, cauda e capacete. Sem nada tecnológico (hologramas e bracelete removidos do modelo,
-    óculos sem brilho). Retirados nesta variante: Limpar a poeira, Afiar a lâmina, Encarar o horizonte.
+    óculos sem brilho). Retirados nesta variante: Limpar a poeira, Afiar a lâmina, Encarar o horizonte, Reconhecer o
+    alvo, Finalizando contrato, Saudacao do velho oeste e a opção de colocar os óculos (com contrato, carvão e tudo
+    o que era deles).
   - Gerar: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/CACADORES/skin_CACADORES_64x64_original.png modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel --fur verde --brow verde --acessorios cacadores --hide fur_chest --pelo body.north:0-4,body.south:0-1,body.up --emotes "Raiva,Super serio,WTF,Tranquilidade,Alongamento,Estalar o pescoco,Esconder orelhas,Esconder cauda,Ignorar capacete" --remove-props holo,bracelete`
     e depois `python3 tools/cacadores_emotes.py modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel modelo/variantes/CACADORES/skin_v16.28_CACADORES.bbmodel`
     (`tools/animlib.py` = ferramentas de animação compartilhadas com o gerador principal).
+
+- **Variante branca** — `modelo/variantes/BRANCA/skin_v16.28_BRANCA.bbmodel` (+ `Emezomm-CPM_v16.28_BRANCA_256.png`),
+  da skin `skin_BRANCA_64x64_original.png`. Pelo escuro vira **branco/cinza-claro** (o branco original continua),
+  rosto igual, sobrancelha cinza. Roupa de cavaleiro: tabardo creme com **cruz dourada**, ombreiras e braços de
+  couro escuro com detalhes dourados, cinto, calça e botas escuras com rebites dourados, com a segunda camada.
+  **Gola 3D** creme com friso dourado e fecho no pescoço (a faixa dourada da camada de chapéu da skin). Tufos do
+  peito escondidos pelo tabardo. Todas as animações, emotes e configurações do Emezomm original.
+  Prévia: `previews/variante_BRANCA.png`.
+  Comando: `python3 tools/variante.py modelo/skin_v16.28.bbmodel modelo/variantes/BRANCA/skin_BRANCA_64x64_original.png modelo/variantes/BRANCA/skin_v16.28_BRANCA.bbmodel --fur branco --acessorios branca --hide fur_chest`
 
 **Aviso sobre o Blockbench:** as transições de entrada e saída do CPM têm o **mesmo nome** (ex.: `p:walking` e
 `g:Raiva`, uma "setup" e outra "finish"). Ao abrir o projeto, o Blockbench renomeia a segunda para `p:walking2` /
