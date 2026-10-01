@@ -1,5 +1,10 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.39 — parado sem balanço do peito
+
+Arquivo atual: `modelo/variantes/LAST/skin_v16.39_LAST.bbmodel`. Igual à v16.38, mas parado o corpo não balança mais.
+Era uma leve troca de peso parado, que depois de andar parecia o peito ainda se mexendo.
+
 ## L.A.S.T v16.38 — correções do andar (cabeça travada, parada brusca)
 
 Arquivo atual: `modelo/variantes/LAST/skin_v16.38_LAST.bbmodel`.

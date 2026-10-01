@@ -274,6 +274,11 @@ def lively_walk():
 
 
 lively_walk()
+
+# standing still: no idle sway of the body (after walking it read as the chest still moving)
+strip(main_of('standing'), BODY)
+for st in staged_of('standing').values():
+    strip(st, BODY)
 # running: sprint stride is 0.47 s (Minecraft caps the limb speed), bigger and bouncier, leaning forward
 w, cp = gait('Correndo', 'running', 0.47, legs_amp=52, arm_amp=40, twist=9, bob=0.6, roll=2.2, lean=-12,
              arm_fwd=12, arm_out=5, head_fix=10, lift=2.0, tail_x=20)
