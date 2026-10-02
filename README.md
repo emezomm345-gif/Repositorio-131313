@@ -1,5 +1,13 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.51 — Cinema: braços firmes
+
+Arquivo atual: `modelo/variantes/LAST/skin_v16.51_LAST.bbmodel`.
+
+Na v16.50 os braços do Cinema eram calculados quadro a quadro pela direção até a placa, e isso fazia os ângulos
+virarem e girarem. Agora são ângulos simples, sempre os mesmos, interpolados direto da pose do peito para a pose
+sobre a cabeça. Os braços sobem firmes, sem girar, e ficam parados segurando a placa no alto, sem o balanço.
+
 ## L.A.S.T v16.50 — emote "Cinema"
 
 Arquivo atual: `modelo/variantes/LAST/skin_v16.50_LAST.bbmodel`, gerado por `tools/last_cinema.py` sobre a v16.49.

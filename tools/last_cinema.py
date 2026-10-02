@@ -135,21 +135,28 @@ show = curve([(0, 0.02), (0.6, 0.02), (0.75, 0.55), (0.8, 0.3), (0.95, 0.9), (1.
 memo = {}
 
 
+ARM_CH = (80.0, 11.0, 0.0)      # arm raise (x), turn in (y), sideways (z): holding the sign at the chest
+ARM_UP = (163.0, 0.0, 7.0)      # ... and over the head
+# plain x / z angles, interpolated directly: no direction solving per frame, so the arms never flip or spin
+
+
+def hand_world(arm, rot):
+    A = np.array(PIVOT[arm], float)
+    return A + rotmat(rot) @ (HAND[arm] - A)
+
+
 def pose(t):
     k = round(t, 4)
     if k not in memo:
         u = lift(t)
-        hx = CH[0] + (UP[0] - CH[0]) * u
-        hy = CH[1] + (UP[1] - CH[1]) * u + bob(t)
-        tr, tl = on_sphere('right_arm', hx, hy), on_sphere('left_arm', -hx, hy)
-        rr, rl = reach('right_arm', tr), reach('left_arm', tl)
         m = out_k(t)
-        rr, rl = tuple(m * v for v in rr), tuple(m * v for v in rl)
+        ax, ay, az = [c0 + (c1 - c0) * u for c0, c1 in zip(ARM_CH, ARM_UP)]
+        rr, rl = (ax * m, ay * m, az * m), (ax * m, -ay * m, -az * m)
+        hr, hl = hand_world('right_arm', (ax, ay, az)), hand_world('left_arm', (ax, -ay, -az))
         s = size(max(0.0, u)) * show(t)
-        center = (tr + tl) / 2 + np.array([0.0, PH * s / 2 if u > 0.5 else 0.0, -0.4])
+        center = (hr + hl) / 2 + np.array([0.0, 0.0, -0.3])
         # at the chest the hands hold the middle of the sides; over the head they hold the bottom corners
-        blend = smooth((u - 0.3) / 0.5)
-        center[1] = (tr[1] + tl[1]) / 2 + blend * PH * size(u) / 2
+        center[1] += smooth((u - 0.3) / 0.5) * PH * size(u) / 2
         memo[k] = (rr, rl, tuple(center - np.array(PIV)), (s, s, s))
     return memo[k]
 
