@@ -1,5 +1,11 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.53, Caçadores v16.37, Templário v16.40 — cauda no pulo e no voo criativo
+
+`tools/cauda_pulo.py`: no pulo e no voo criativo (e nas entradas e saídas deles), a cauda subia demais. Agora ela
+levanta 25% do que levantava e continua balançando. No pulo, a base da cauda também compensa os 8° de inclinação
+do corpo, de onde ela sai.
+
 ## L.A.S.T v16.52 e Templário v16.39 — mesmas correções do Caçadores v16.36
 
 Arquivos atuais: `modelo/variantes/LAST/skin_v16.52_LAST.bbmodel` (a partir da v16.51) e
