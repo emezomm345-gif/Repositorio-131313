@@ -1,5 +1,19 @@
 # Skin CPM – tufos de pelo
 
+## Caçadores v16.31 A / B / C — corrida compatível com Better Combat e TACZ (teste)
+
+O nosso ciclo de corrida e o golpe recriado substituíam por completo os braços (e as pernas) do Minecraft. Com
+isso, correndo, sumiam as animações do Better Combat e do TACZ. Para testar, geramos três bases a partir de
+`skin_v16.30_CACADORES.bbmodel` com `tools/compat_corrida.py`. Em todas, o golpe recriado saiu: atacar volta a ser o
+golpe do Minecraft ou do Better Combat.
+
+- **A** (`skin_v16.31_CACADORES_A.bbmodel`): braços e pernas são os do Minecraft e dos mods. Fica o nosso corpo
+  da corrida (inclinação, giro, quique, cabeça, cauda), e os braços acompanham o tronco: inclinam e vão um pouco à
+  frente e para fora, somados ao braço do mod.
+- **B** (`..._B.bbmodel`): pernas com a nossa passada; braços do Minecraft e dos mods. O corpo é igual ao da A.
+- **C** (`..._C.bbmodel`): como a A, mas a corrida nunca gira os braços, só move os ombros junto com o tronco. O
+  ângulo dos braços é exatamente o do mod, então a mira do TACZ fica exata.
+
 ## Templário v16.38 — movimentos do L.A.S.T, gatilhos, limpeza
 
 Arquivo atual: `modelo/variantes/BRANCA/skin_v16.38_BRANCA.bbmodel`. A base é o seu
