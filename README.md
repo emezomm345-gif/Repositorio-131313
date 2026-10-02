@@ -1,5 +1,18 @@
 # Skin CPM – tufos de pelo
 
+## Caçadores v16.32 — corrida A + andar mais animado e inclinado
+
+Arquivo atual: `modelo/variantes/CACADORES/skin_v16.32_CACADORES.bbmodel`. É a base A (escolhida) passada por
+`tools/andar_animado.py`. Prévia: `previews/variante_CACADORES_andar.gif` (braços e pernas simulados).
+
+- **Postura do andar:**
+  - o tronco inclina 8° para a frente, em volta do quadril (antes eram 2,5°);
+  - cabeça, ombros e braços acompanham o tronco, e a cabeça levanta o olhar de volta para a frente;
+  - braços um pouco à frente e soltos.
+- **Balanço do corpo:** quique, rolagem de peso e giro de ombros quase o dobro de antes, no ritmo do passo do
+  Minecraft.
+- **Compatibilidade:** tudo continua somando ao Minecraft, então Better Combat e TACZ seguem funcionando.
+
 ## Caçadores v16.31 A / B / C — corrida compatível com Better Combat e TACZ (teste)
 
 O nosso ciclo de corrida e o golpe recriado substituíam por completo os braços (e as pernas) do Minecraft. Com
