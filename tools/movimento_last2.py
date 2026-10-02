@@ -492,6 +492,34 @@ for typ, dur in (('running', 0.15), ('jumping', 0.05)):
     if 'setup' in st:
         stretch(st['setup'], dur)
 
+# ------------------------------------------------------------------ gesture menu
+# Looping emotes become toggles (CPM layers: on until you switch them off, they stay while you move); emotes with a
+# start and an end stay as they are. Buttons are ordered: expressions, looping poses, emotes, settings.
+LOOPING = ('Pensativo', 'Tristeza')
+
+
+def _to_layer(x):
+    if x['cpm_type'] == 'custom_pose':
+        x['cpm_type'] = 'layer'
+    for pre in ('c:',):
+        if x['name'].startswith(pre):
+            x['name'] = 'g:' + x['name'][2:]
+
+
+for x in EXISTING + NEW:
+    base = x['name'].split('#')[0]
+    if base in LOOPING or (x['name'][:2] == 'c:' and x['name'][2:].rstrip('2') in LOOPING):
+        _to_layer(x)
+MENU = ['Raiva', 'Super serio', 'WTF', 'Tranquilidade',
+        'Pensativo', 'Tristeza',
+        'Saudacao', 'Alongamento', 'Estalar o pescoco', 'Investigar', 'Pouso de heroi',
+        'Alerta de emergencia', 'Mapa 3D', 'Holograma de missao', 'Finalizando missao',
+        'Esconder orelhas', 'Esconder cauda', 'Ignorar capacete']
+for x in EXISTING + NEW:
+    base = x['name'].split('#')[0]
+    if x['cpm_type'] in ('layer', 'gesture', 'custom_pose') and base in MENU:
+        x['cpm_order'] = MENU.index(base)
+
 # ------------------------------------------------------------------ save
 order = {}
 for x in EXISTING:
@@ -501,6 +529,10 @@ for x in NEW:
     order[x['cpm_type']] = order.get(x['cpm_type'], 0) + 1
     if x['cpm_type'] in ('bow_left', 'bow_right', 'crossbow_ch_left', 'crossbow_ch_right', 'punch_left', 'punch_right'):
         x['loop'] = 'loop'                                      # value-driven: CPM wants them looping
+for x in EXISTING + NEW:                                        # gesture menu order (see above)
+    base = x['name'].split('#')[0]
+    if x['cpm_type'] in ('layer', 'gesture', 'custom_pose') and base in MENU:
+        x['cpm_order'] = MENU.index(base)
 d['animations'] = EXISTING + NEW
 json.dump(d, open(OUT, 'w'))
 print('ok: %d new animations' % len(NEW))

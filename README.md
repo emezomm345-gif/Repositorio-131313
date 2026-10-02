@@ -1,5 +1,19 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.48 — emotes em loop viram liga/desliga, menu organizado
+
+Arquivo atual: `modelo/variantes/LAST/skin_v16.48_LAST.bbmodel`.
+
+- **Pensativo e Tristeza:** viraram botões de ligar/desligar, como as expressões. Ficam ligados até você apertar de
+  novo, mesmo andando, e entram e saem suaves (`g:`).
+- **Emotes com começo e fim:** não mudaram.
+- **Ordem do menu de gestos:**
+  1. Expressões: Raiva, Super sério, WTF, Tranquilidade.
+  2. Poses em loop: Pensativo, Tristeza.
+  3. Emotes: Saudação, Alongamento, Estalar o pescoço, Investigar, Pouso de herói, Alerta de emergência, Mapa 3D,
+     Holograma de missão, Finalizando missão.
+  4. Configurações: Esconder orelhas, Esconder cauda, Ignorar capacete.
+
 ## L.A.S.T v16.47 — começar / parar de andar mais suave
 
 Arquivo atual: `modelo/variantes/LAST/skin_v16.47_LAST.bbmodel`.
