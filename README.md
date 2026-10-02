@@ -1,5 +1,28 @@
 # Skin CPM – tufos de pelo
 
+## Templário v16.38 — movimentos do L.A.S.T, gatilhos, limpeza
+
+Arquivo atual: `modelo/variantes/BRANCA/skin_v16.38_BRANCA.bbmodel`. A base é o seu
+`ajuste_usuario_v16.37_BRANCA.bbmodel`, com os mesmos passos do Caçadores
+(`LOOPING="Rezar,Meditacao extrema"`).
+
+- **Movimentos:** são 100% os do L.A.S.T. Tem as mesmas animações de movimento; só os nomes das saídas foram
+  corrigidos, como explicado abaixo.
+- **Emotes:** nenhum foi adicionado nem removido.
+  - Rezar e Meditação extrema viraram liga/desliga, com os olhos fechados no mesmo botão.
+  - As expressões (incluindo Subestimar) já eram liga/desliga.
+  - Os gestos com começo e fim continuam iguais.
+  - Ordem do menu: expressões → Rezar, Meditação extrema → Investigar, Pouso de herói, Estalar o pescoço, Explosão
+    de luz → configurações.
+- **Saídas renomeadas:** as saídas que o Blockbench tinha renomeado (`p:running2`, `g:Raiva2`…) voltaram aos
+  nomes certos, para o CPM ligar cada uma à sua pose.
+- **Limpeza:**
+  - removidos 14 elementos invisíveis no seu arquivo: tufos do peito, bochechas e dois tufos das costas que você
+    tinha apagado. Saíram também os 17 grupos e as 229 trilhas deles, e a animação "Respirar", que só mexia
+    nessas peças invisíveis;
+  - 1621 pixels sem uso apagados da textura;
+  - parado, o modelo ficou idêntico (24 ângulos comparados).
+
 ## Caçadores v16.30 — movimentos do L.A.S.T, gatilhos, limpeza
 
 Arquivo atual: `modelo/variantes/CACADORES/skin_v16.30_CACADORES.bbmodel`. A base é o seu
