@@ -39,7 +39,7 @@ if not any(g['name'] == 'cabeca_mov' for g in d['groups']):
     _h['children'] = [{'uuid': _g['uuid'], 'isOpen': False, 'children': _h['children']}]
 n_groups = len(d['groups'])
 exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'animlib.py')).read())
-LEAN = -8.0
+LEAN = float(os.environ.get('LEAN', '-8'))
 S = 0.55
 
 

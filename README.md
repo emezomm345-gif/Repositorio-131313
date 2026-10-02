@@ -1,5 +1,11 @@
 # Skin CPM – tufos de pelo
 
+## Caçadores v16.34 — andar mais inclinado
+
+Arquivo atual: `modelo/variantes/CACADORES/skin_v16.34_CACADORES.bbmodel`
+(`LEAN=-12 tools/andar_animado.py`). Ao andar, o tronco inclina 12° para a frente (antes eram 8°); a cabeça
+compensa para continuar olhando à frente.
+
 ## Caçadores v16.33 — cabeça animada ao andar
 
 Arquivo atual: `modelo/variantes/CACADORES/skin_v16.33_CACADORES.bbmodel`.
