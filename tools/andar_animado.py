@@ -76,8 +76,9 @@ g.pos('corpo_mov', lambda t: tuple(at(t)['body'][1]))
 # head: rides on the torso (moves with the bob and the lean of the shoulders), nods a moment after each step,
 # tilts against the roll and turns a little against the twist (keeps the look steady)
 nod = lambda t: 0.5 * (1 - math.cos(4 * math.pi * (t - 0.04) / S))
-g.pos('cabeca_mov', lambda t: add3(at(t)['head'][1], (0.0, -0.1 * nod(t), 0.0)))
-g.rot('cabeca_mov', lambda t: (2.4 * nod(t) - 1.0, -3.5 * twist(t - 0.05), -2.2 * roll(t - 0.06)))
+HEAD = float(os.environ.get('HEAD', '1'))             # head motion amount (1 = v16.33)
+g.pos('cabeca_mov', lambda t: add3(at(t)['head'][1], (0.0, -0.1 * HEAD * nod(t), 0.0)))
+g.rot('cabeca_mov', lambda t: (HEAD * (2.4 * nod(t) - 1.0), -3.5 * HEAD * twist(t - 0.05), -2.2 * HEAD * roll(t - 0.06)))
 
 new = {an.name: an.to_json() for an in (p, g)}
 for i, a in enumerate(d['animations']):

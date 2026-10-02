@@ -1,5 +1,15 @@
 # Skin CPM – tufos de pelo
 
+## Caçadores v16.35 — cabeça mais calma, transições da corrida
+
+Arquivo atual: `modelo/variantes/CACADORES/skin_v16.35_CACADORES.bbmodel`.
+
+- **Cabeça ao andar:** o movimento caiu para 40% do que era (`HEAD=0.4 tools/andar_animado.py`).
+- **Entrar na corrida:** agora leva 0,4 s em vez de 0,15 s e começa da postura do andar (inclinada −12°), indo
+  suave até −18°. Antes ele "endireitava" e só depois inclinava.
+- **Sair da corrida:** continua com 0,5 s suaves.
+- **Parado ↔ andando:** continua uma troca direta, porque o CPM fica reiniciando a pose de andar no jogo.
+
 ## Caçadores v16.34 — andar mais inclinado
 
 Arquivo atual: `modelo/variantes/CACADORES/skin_v16.34_CACADORES.bbmodel`
