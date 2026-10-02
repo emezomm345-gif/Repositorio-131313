@@ -1,5 +1,19 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.49 — limpeza
+
+Arquivo atual: `modelo/variantes/LAST/skin_v16.49_LAST.bbmodel`. Ele é a v16.48 passada por `tools/limpar.py`, e
+nada visível mudou: comparei os renders, parado e em várias animações, e são idênticos.
+
+- **Elementos removidos:**
+  - os 10 tufos do peito, que estavam escondidos pela roupa e eram invisíveis;
+  - `tail_2_bevel`, que estava oculto.
+- **Grupos e trilhas:** saíram os 14 grupos que ficaram vazios (os tufos do peito e os grupos que os moviam) e as
+  144 trilhas de animação que mexiam neles.
+- **Textura:** 1017 pixels que nenhuma face usava foram apagados.
+- **Tamanho do arquivo:** caiu de 5,1 MB para 4,4 MB.
+- **Animações:** nenhuma estava vazia, sem efeito ou com transição órfã.
+
 ## L.A.S.T v16.48 — emotes em loop viram liga/desliga, menu organizado
 
 Arquivo atual: `modelo/variantes/LAST/skin_v16.48_LAST.bbmodel`.
