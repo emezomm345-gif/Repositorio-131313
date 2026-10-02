@@ -14,6 +14,29 @@ import numpy as np
 SRC, OUT = sys.argv[1], sys.argv[2]
 d = json.load(open(SRC))
 FPS = 20
+
+# 'cabeca_mov': group inside the head holding everything the head carries; the walking nod moves it (never the
+# vanilla head, so the look direction stays Minecraft's / the mods')
+import copy as _copy, uuid as _uuid
+_G = {g['uuid']: g for g in d['groups']}
+
+
+def _node(ns, name):
+    for n in ns:
+        if isinstance(n, dict):
+            if _G[n['uuid']]['name'] == name:
+                return n
+            r = _node(n['children'], name)
+            if r:
+                return r
+
+
+if not any(g['name'] == 'cabeca_mov' for g in d['groups']):
+    _h = _node(d['outliner'], 'head')
+    _g = _copy.deepcopy(_G[_h['uuid']])
+    _g.update(name='cabeca_mov', uuid=str(_uuid.uuid4()), origin=[0, 24, 0], rotation=[0, 0, 0])
+    d['groups'].append(_g)
+    _h['children'] = [{'uuid': _g['uuid'], 'isOpen': False, 'children': _h['children']}]
 n_groups = len(d['groups'])
 exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'animlib.py')).read())
 LEAN = -8.0
@@ -50,6 +73,11 @@ def at(t):
 
 g.rot('corpo_mov', lambda t: tuple(at(t)['body'][0]))
 g.pos('corpo_mov', lambda t: tuple(at(t)['body'][1]))
+# head: rides on the torso (moves with the bob and the lean of the shoulders), nods a moment after each step,
+# tilts against the roll and turns a little against the twist (keeps the look steady)
+nod = lambda t: 0.5 * (1 - math.cos(4 * math.pi * (t - 0.04) / S))
+g.pos('cabeca_mov', lambda t: add3(at(t)['head'][1], (0.0, -0.1 * nod(t), 0.0)))
+g.rot('cabeca_mov', lambda t: (2.4 * nod(t) - 1.0, -3.5 * twist(t - 0.05), -2.2 * roll(t - 0.06)))
 
 new = {an.name: an.to_json() for an in (p, g)}
 for i, a in enumerate(d['animations']):
@@ -57,6 +85,16 @@ for i, a in enumerate(d['animations']):
         j = new[a['name']]
         j['cpm_order'] = a.get('cpm_order', 0)
         d['animations'][i] = j
+# the rests that switch the walking sway off in every other state also hold the head group still
+E = 0.02
+for a in d['animations']:
+    if not a['cpm_additive'] and GRP['corpo_mov']['uuid'] in a['animators'] and GRP['cabeca_mov']['uuid'] not in a['animators']:
+        src = a['animators'][GRP['corpo_mov']['uuid']]
+        a['animators'][GRP['cabeca_mov']['uuid']] = {
+            'name': 'cabeca_mov', 'type': 'bone',
+            'keyframes': [dict(k, uuid=str(uuid.uuid4()), data_points=[{'x': E, 'y': 0.0, 'z': 0.0} if k['channel'] == 'rotation'
+                                                                       else {'x': 0.0, 'y': E, 'z': 0.0}])
+                          for k in src['keyframes']]}
 d['name'] = os.path.basename(OUT).rsplit('.', 1)[0]
 json.dump(d, open(OUT, 'w'))
 print('ok')

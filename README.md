@@ -1,5 +1,16 @@
 # Skin CPM – tufos de pelo
 
+## Caçadores v16.33 — cabeça animada ao andar
+
+Arquivo atual: `modelo/variantes/CACADORES/skin_v16.33_CACADORES.bbmodel`.
+
+Foi criado um grupo novo, `cabeca_mov`, dentro da cabeça, com tudo o que a cabeça carrega. O balanço global do
+andar agora também mexe nele:
+- **Movimento:** a cabeça vai junto com o sobe e desce e com a inclinação dos ombros, acena um instante depois de
+  cada passo, inclina contra a rolagem e gira um pouco contra o giro dos ombros, segurando o olhar.
+- **Olhar:** a cabeça do Minecraft continua livre, então o olhar segue a câmera e os mods.
+- **Outros estados:** os "Repouso do corpo" também seguram esse grupo parado.
+
 ## Caçadores v16.32 — corrida A + andar mais animado e inclinado
 
 Arquivo atual: `modelo/variantes/CACADORES/skin_v16.32_CACADORES.bbmodel`. É a base A (escolhida) passada por
