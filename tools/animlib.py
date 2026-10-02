@@ -111,6 +111,7 @@ mul3 = lambda v, k: tuple(x * k for x in v)
 
 # ============================================================ per-tuft bones (lift around the root)
 FUR = ['fur_top', 'fur_back', 'fur_cheek_R', 'fur_cheek_L', 'fur_chest_rows', 'fur_chest_edge_R', 'fur_chest_edge_L']
+FUR = [g for g in FUR if g in GRP]          # models cleaned with tools/limpar.py may not have all of them
 UUID2EL = {e['uuid']: e for e in d['elements']}
 TUFTS = {}          # fur group -> [tuft bone names]
 LIFT_AXIS = {}      # tuft bone -> (axis in the parent frame, parent rotation matrix)

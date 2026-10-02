@@ -1,5 +1,20 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.50 — emote "Cinema"
+
+Arquivo atual: `modelo/variantes/LAST/skin_v16.50_LAST.bbmodel`, gerado por `tools/last_cinema.py` sobre a v16.49.
+Prévia: `previews/variante_LAST_cinema.gif`.
+
+**Cinema** (gesto de duração, no menu depois de "Finalizando missão"):
+- As mãos vêm à frente do peito e uma placa holográfica aparece entre elas, piscando como holograma.
+- As duas mãos pegam a placa pelas laterais. Ele abaixa um pouco (preparação) e a levanta sobre a cabeça, passando
+  um pouco do ponto e assentando.
+- Segura a placa no alto balançando de leve, com cara orgulhosa, orelhas em pé e cauda abanando. Depois abaixa e o
+  holograma some.
+- **A placa:** brilha, no mesmo ciano dos outros hologramas do L.A.S.T, tem bordas de rolo de filme e o texto
+  **CINEMA**, legível de frente e de trás.
+- **Parado:** a placa fica escondida dentro do tronco, como os outros hologramas, e o modelo fica idêntico.
+
 ## L.A.S.T v16.49 — limpeza
 
 Arquivo atual: `modelo/variantes/LAST/skin_v16.49_LAST.bbmodel`. Ele é a v16.48 passada por `tools/limpar.py`, e
