@@ -1,5 +1,28 @@
 # Skin CPM – tufos de pelo
 
+## Caçadores v16.30 — movimentos do L.A.S.T, gatilhos, limpeza
+
+Arquivo atual: `modelo/variantes/CACADORES/skin_v16.30_CACADORES.bbmodel`. A base é o seu
+`ajuste_usuario_v16.29_CACADORES.bbmodel`, com os mesmos passos do L.A.S.T:
+
+1. `tools/movimento.py` → `tools/movimento_last.py` →
+   `LOOPING="Jogar moeda" MENU="..." tools/movimento_last2.py` → `tools/limpar.py`.
+2. **Movimentos:** são 100% os do L.A.S.T: andar (postura e balanço do corpo), parado, correr, pular e comer
+   padrão, agachar, rastejar, nadar, escada, dormir, cara de dor, voo, queda, virar e transições. As animações dos
+   acessórios (bandana e óculos) continuam.
+3. **Emotes:** nenhum foi adicionado nem removido.
+   - Jogar moeda virou liga/desliga.
+   - As expressões e Óculos nos olhos já eram liga/desliga.
+   - Os gestos com começo e fim continuam iguais.
+   - Ordem do menu: expressões → Óculos nos olhos → Jogar moeda → Saudação do velho oeste, Reconhecer o alvo,
+     Finalizando contrato, Alongamento, Estalar o pescoço → Esconder orelhas, Esconder cauda, Ignorar capacete.
+4. **Limpeza:**
+   - 10 tufos do peito invisíveis e `tail_2_bevel` oculto removidos, junto com os 14 grupos e as 134 trilhas
+     deles;
+   - 1193 pixels sem uso apagados da textura;
+   - as caixas da segunda camada da skin (hat, jacket, sleeves, pants) foram mantidas, para poder pintar depois;
+   - parado, o modelo ficou idêntico (24 ângulos comparados).
+
 ## L.A.S.T v16.51 — Cinema: braços firmes
 
 Arquivo atual: `modelo/variantes/LAST/skin_v16.51_LAST.bbmodel`.

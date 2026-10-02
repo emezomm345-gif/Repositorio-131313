@@ -495,7 +495,7 @@ for typ, dur in (('running', 0.15), ('jumping', 0.05)):
 # ------------------------------------------------------------------ gesture menu
 # Looping emotes become toggles (CPM layers: on until you switch them off, they stay while you move); emotes with a
 # start and an end stay as they are. Buttons are ordered: expressions, looping poses, emotes, settings.
-LOOPING = ('Pensativo', 'Tristeza')
+LOOPING = tuple(os.environ['LOOPING'].split(',')) if os.environ.get('LOOPING') else ('Pensativo', 'Tristeza')
 
 
 def _to_layer(x):
@@ -510,7 +510,7 @@ for x in EXISTING + NEW:
     base = x['name'].split('#')[0]
     if base in LOOPING or (x['name'][:2] == 'c:' and x['name'][2:].rstrip('2') in LOOPING):
         _to_layer(x)
-MENU = ['Raiva', 'Super serio', 'WTF', 'Tranquilidade',
+MENU = os.environ['MENU'].split(',') if os.environ.get('MENU') else ['Raiva', 'Super serio', 'WTF', 'Tranquilidade',
         'Pensativo', 'Tristeza',
         'Saudacao', 'Alongamento', 'Estalar o pescoco', 'Investigar', 'Pouso de heroi',
         'Alerta de emergencia', 'Mapa 3D', 'Holograma de missao', 'Finalizando missao',

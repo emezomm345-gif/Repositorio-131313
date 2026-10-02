@@ -2,7 +2,8 @@
 
 usage: python3 tools/limpar.py <in.bbmodel> <out.bbmodel>
 
-- elements hidden in Blockbench (except the vanilla 'hat' box of the head) or with no visible pixel on any face;
+- elements hidden in Blockbench or with no visible pixel on any face (except the skin second-layer boxes:
+  hat, jacket, sleeves, pants, kept so that layer can still be painted);
 - groups left empty by that, and every animation track that pointed to them;
 - animations left without any track, and orphan entry/exit transitions;
 - texture pixels that no face uses (cleared to transparent).
@@ -16,7 +17,7 @@ d = json.load(open(SRC))
 G = {g['uuid']: g for g in d['groups']}
 E = {e['uuid']: e for e in d['elements']}
 T = np.array(Image.open(io.BytesIO(base64.b64decode(d['textures'][0]['source'].split(',', 1)[1]))).convert('RGBA'))
-KEEP = {'hat'}
+KEEP = {'hat', 'jacket', 'sleeve', 'pant', 'pants'}   # skin second-layer boxes: kept for painting later
 
 
 def rect(fc):
@@ -35,7 +36,7 @@ def visible(e):
     return False
 
 
-drop_e = {u for u, e in E.items() if e['name'] not in KEEP and (e.get('visibility') is False or not visible(e))}
+drop_e = {u for u, e in E.items() if e['name'].lower() not in KEEP and (e.get('visibility') is False or not visible(e))}
 
 
 def prune(nodes):
