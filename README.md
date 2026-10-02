@@ -1,5 +1,19 @@
 # Skin CPM – tufos de pelo
 
+## L.A.S.T v16.52 e Templário v16.39 — mesmas correções do Caçadores v16.36
+
+Arquivos atuais: `modelo/variantes/LAST/skin_v16.52_LAST.bbmodel` (a partir da v16.51) e
+`modelo/variantes/BRANCA/skin_v16.39_BRANCA.bbmodel` (a partir da v16.38). Passos:
+`tools/compat_corrida.py A` → `LEAN=-8 HEAD=0.4 tools/andar_animado.py` → `tools/transicoes.py`.
+
+- **Corrida A:** braços e pernas do Minecraft e dos mods, e o golpe recriado saiu. Better Combat e TACZ
+  funcionam correndo.
+- **Andar:** inclinação de −8°, balanço do corpo e cabeça animada (grupo `cabeca_mov`, 40%).
+- **Transições e pulo:** entrada na corrida de 0,4 s a partir da postura do andar, e pulo animado mantendo a
+  postura do andar.
+- **Compatibilidade:** nenhuma animação substitui braços, pernas, cabeça ou corpo.
+- **Parado:** o modelo ficou idêntico nos dois.
+
 ## Caçadores v16.36 — pulo animado e transições andar / correr / pular
 
 Arquivo atual: `modelo/variantes/CACADORES/skin_v16.36_CACADORES.bbmodel`

@@ -7,7 +7,7 @@ import math, uuid, copy
 import numpy as np
 ELS = {e['name']: e for e in d['elements']}
 GRP = {g['name']: g for g in d['groups']}
-TEMPLATE = GRP['bochechas']
+TEMPLATE = GRP.get('bochechas') or GRP['head']      # 'bochechas' may be gone after tools/limpar.py
 GRP_BY_UUID = lambda u: next(g for g in d['groups'] if g['uuid'] == u)
 
 
