@@ -1,5 +1,20 @@
 # Skin CPM – tufos de pelo
 
+## Caçadores v16.36 — pulo animado e transições andar / correr / pular
+
+Arquivo atual: `modelo/variantes/CACADORES/skin_v16.36_CACADORES.bbmodel`
+(`LEAN=-8 HEAD=0.4 tools/andar_animado.py` + `tools/transicoes.py`). Tudo continua somando ao Minecraft (nenhuma
+animação substitui braços, pernas ou cabeça), então Better Combat, TACZ e outros mods continuam funcionando.
+
+- **Andar:** inclinação de −8° (antes −12°), para o salto entre parado e andando ficar menor. A cabeça continua
+  calma (40%).
+- **Entrar na corrida:** 0,4 s, começando exatamente na postura do andar.
+- **Pulo:** voltou a ter corpo, somado por cima do Minecraft. Ele dá o impulso, encolhe uma perna depois da outra,
+  sobe e abre os braços, estica as pernas para o chão e a cabeça acompanha. Durante todo o pulo ele mantém a
+  postura do andar, então andar → pular → andar ou correr não endireita o corpo no meio. Prévia:
+  `previews/variante_CACADORES_pulo.gif`.
+- **Pulando parado:** o corpo inclina um pouco no impulso e volta ao aterrissar.
+
 ## Caçadores v16.35 — cabeça mais calma, transições da corrida
 
 Arquivo atual: `modelo/variantes/CACADORES/skin_v16.35_CACADORES.bbmodel`.
